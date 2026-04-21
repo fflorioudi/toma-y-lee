@@ -21,6 +21,7 @@ type Book = {
   external_link: string | null;
   pdf_url: string | null;
   cover_url: string | null;
+  category_id: string | null;
 };
 
 type ReviewRow = {
@@ -74,7 +75,7 @@ export default async function LibroDetallePage({ params }: PageProps) {
   const { data: book, error: bookError } = await supabase
     .from("books")
     .select(
-      "id, user_id, title, author, description, featured_quote, external_link, pdf_url, cover_url"
+      "id, user_id, title, author, description, featured_quote, external_link, pdf_url, cover_url, category_id"
     )
     .eq("id", id)
     .eq("is_hidden", false)
@@ -140,6 +141,25 @@ export default async function LibroDetallePage({ params }: PageProps) {
 
   const promedio = calcularPromedio(reviewsWithUser);
   const reviewsCount = reviewsWithUser.length;
+
+  let relatedBooks: {
+    id: string;
+    title: string;
+    author: string;
+    cover_url: string | null;
+  }[] = [];
+
+  if (typedBook.category_id) {
+    const { data: relatedData } = await supabase
+      .from("books")
+      .select("id, title, author, cover_url")
+      .eq("is_hidden", false)
+      .eq("category_id", typedBook.category_id)
+      .neq("id", typedBook.id)
+      .limit(4);
+
+    relatedBooks = relatedData || [];
+  }
 
   return (
     <main className="page-container">
@@ -322,6 +342,63 @@ export default async function LibroDetallePage({ params }: PageProps) {
           <h2 style={{ marginTop: 0 }}>Dejar una reseña</h2>
           <ReviewForm bookId={typedBook.id} />
         </div>
+      </section>
+
+      <section className="top-space-lg">
+        <h2 className="section-title" style={{ fontSize: "2rem", color: "var(--accent)" }}>
+          También te puede interesar
+        </h2>
+
+        {relatedBooks.length === 0 ? (
+          <div className="card">
+            <p className="empty-state" style={{ margin: 0 }}>
+              No encontramos más libros relacionados por ahora.
+            </p>
+          </div>
+        ) : (
+          <div className="grid-auto">
+            {relatedBooks.map((book) => (
+              <Link
+                key={book.id}
+                href={`/libro/${book.id}`}
+                style={{ textDecoration: "none", color: "inherit" }}
+              >
+                <article className="card card-hover" style={{ height: "100%" }}>
+                  {book.cover_url ? (
+                    <img
+                      src={book.cover_url}
+                      alt={book.title}
+                      style={{
+                        width: "100%",
+                        height: "220px",
+                        objectFit: "cover",
+                        borderRadius: "14px",
+                        border: "1px solid var(--border)",
+                        marginBottom: "0.9rem",
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "220px",
+                        background: "var(--surface-soft)",
+                        borderRadius: "14px",
+                        border: "1px solid var(--border)",
+                        marginBottom: "0.9rem",
+                      }}
+                    />
+                  )}
+
+                  <h3 style={{ marginTop: 0, marginBottom: "0.35rem" }}>{book.title}</h3>
+                  <p className="subtle-text" style={{ marginTop: 0 }}>
+                    {book.author}
+                  </p>
+                </article>
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
     </main>
   );

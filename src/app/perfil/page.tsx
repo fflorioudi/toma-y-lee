@@ -40,6 +40,11 @@ export default async function PerfilPage() {
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
+  const { count: reviewsCount } = await supabase
+    .from("reviews")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id);
+
   if (error) {
     return (
       <main className="page-container">
@@ -65,6 +70,51 @@ export default async function PerfilPage() {
         <p className="subtle-text" style={{ marginTop: 0, wordBreak: "break-word" }}>
           {user.email}
         </p>
+      </section>
+
+      <section className="card top-space">
+        <h2 style={{ marginTop: 0 }}>Resumen</h2>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: "1rem",
+            marginTop: "1rem",
+          }}
+        >
+          <div className="card" style={{ boxShadow: "none" }}>
+            <p className="subtle-text" style={{ marginTop: 0 }}>
+              Libros compartidos
+            </p>
+            <p
+              style={{
+                margin: 0,
+                fontSize: "1.8rem",
+                fontWeight: 700,
+                color: "var(--accent)",
+              }}
+            >
+              {typedBooks.length}
+            </p>
+          </div>
+
+          <div className="card" style={{ boxShadow: "none" }}>
+            <p className="subtle-text" style={{ marginTop: 0 }}>
+              Reseñas realizadas
+            </p>
+            <p
+              style={{
+                margin: 0,
+                fontSize: "1.8rem",
+                fontWeight: 700,
+                color: "var(--accent)",
+              }}
+            >
+              {reviewsCount || 0}
+            </p>
+          </div>
+        </div>
       </section>
 
       <section className="card top-space">

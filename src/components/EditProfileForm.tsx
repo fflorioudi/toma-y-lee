@@ -56,48 +56,37 @@ export default function EditProfileForm({
   };
 
   return (
-    <form onSubmit={handleSave} style={{ marginTop: "1rem", maxWidth: "500px" }}>
-      {message && <p style={{ marginBottom: "1rem" }}>{message}</p>}
+    <form onSubmit={handleSave} className="form-grid" style={{ marginTop: "1rem", maxWidth: "520px" }}>
+      {message && (
+        <p
+          style={{
+            marginBottom: "0.5rem",
+            color: message.includes("✅") ? "var(--accent)" : "var(--text)",
+          }}
+        >
+          {message}
+        </p>
+      )}
 
-      <div style={{ marginBottom: "1rem" }}>
+      <div className="form-field">
         <label htmlFor="name">Nombre</label>
         <input
           id="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          style={{
-            display: "block",
-            width: "100%",
-            marginTop: "0.4rem",
-            padding: "0.7rem",
-          }}
         />
       </div>
 
-      <div style={{ marginBottom: "1rem" }}>
+      <div className="form-field">
         <label htmlFor="lastName">Apellido</label>
         <input
           id="lastName"
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
-          style={{
-            display: "block",
-            width: "100%",
-            marginTop: "0.4rem",
-            padding: "0.7rem",
-          }}
         />
       </div>
 
-      <button
-        type="submit"
-        disabled={loading}
-        style={{
-          padding: "0.8rem 1rem",
-          borderRadius: "10px",
-          cursor: "pointer",
-        }}
-      >
+      <button type="submit" disabled={loading}>
         {loading ? "Guardando..." : "Guardar datos"}
       </button>
     </form>

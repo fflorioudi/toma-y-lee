@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -27,10 +27,13 @@ function getStoragePathFromPublicUrl(url: string, bucket: string): string | null
 export default function AdminBookActions({ bookId, isHidden }: Props) {
   const supabase = createClient();
   const router = useRouter();
+  const pathname = usePathname();
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
   const handleToggleHidden = async () => {
     setLoading(true);
+    setMessage("");
 
     const { error } = await supabase
       .from("books")
@@ -38,11 +41,12 @@ export default function AdminBookActions({ bookId, isHidden }: Props) {
       .eq("id", bookId);
 
     if (error) {
-      alert(error.message);
+      setMessage(error.message);
       setLoading(false);
       return;
     }
 
+    setMessage(isHidden ? "Libro visible nuevamente." : "Libro ocultado.");
     router.refresh();
     setLoading(false);
   };
@@ -55,6 +59,7 @@ export default function AdminBookActions({ bookId, isHidden }: Props) {
     if (!confirmed) return;
 
     setLoading(true);
+    setMessage("");
 
     const { data: book, error: bookError } = await supabase
       .from("books")
@@ -63,53 +68,23 @@ export default function AdminBookActions({ bookId, isHidden }: Props) {
       .single();
 
     if (bookError || !book) {
-      alert(bookError?.message || "No se pudo obtener el libro.");
+      setMessage(bookError?.message || "No se pudo obtener el libro.");
       setLoading(false);
       return;
     }
 
-    const storageErrors: string[] = [];
-
     if (book.pdf_url) {
       const pdfPath = getStoragePathFromPublicUrl(book.pdf_url, "book-pdfs");
-
       if (pdfPath) {
-        const { error: pdfDeleteError } = await supabase.storage
-          .from("book-pdfs")
-          .remove([pdfPath]);
-
-        if (
-          pdfDeleteError &&
-          !pdfDeleteError.message.toLowerCase().includes("not found")
-        ) {
-          storageErrors.push(`PDF: ${pdfDeleteError.message}`);
-        }
+        await supabase.storage.from("book-pdfs").remove([pdfPath]);
       }
     }
 
     if (book.cover_url) {
       const coverPath = getStoragePathFromPublicUrl(book.cover_url, "book-covers");
-
       if (coverPath) {
-        const { error: coverDeleteError } = await supabase.storage
-          .from("book-covers")
-          .remove([coverPath]);
-
-        if (
-          coverDeleteError &&
-          !coverDeleteError.message.toLowerCase().includes("not found")
-        ) {
-          storageErrors.push(`Portada: ${coverDeleteError.message}`);
-        }
+        await supabase.storage.from("book-covers").remove([coverPath]);
       }
-    }
-
-    if (storageErrors.length > 0) {
-      alert(
-        `No se pudieron borrar algunos archivos del storage:\n${storageErrors.join("\n")}`
-      );
-      setLoading(false);
-      return;
     }
 
     const { error: deleteError } = await supabase
@@ -118,55 +93,50 @@ export default function AdminBookActions({ bookId, isHidden }: Props) {
       .eq("id", bookId);
 
     if (deleteError) {
-      alert(deleteError.message);
+      setMessage(deleteError.message);
       setLoading(false);
       return;
     }
 
-    router.push("/admin");
-    router.refresh();
+    if (pathname.startsWith("/admin/libros/")) {
+      router.push("/admin");
+    } else {
+      router.refresh();
+    }
+
+    setLoading(false);
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        gap: "0.8rem",
-        marginTop: "0.8rem",
-        flexWrap: "wrap",
-      }}
-    >
-      <Link href={`/admin/libros/${bookId}/editar`}>
-        Editar
-      </Link>
+    <div>
+      <div className="actions-row">
+        <Link href={`/admin/libros/${bookId}/editar`} className="secondary-link">
+          Editar
+        </Link>
 
-      <button
-        type="button"
-        onClick={handleToggleHidden}
-        disabled={loading}
-        style={{
-          padding: "0.4rem 0.8rem",
-          borderRadius: "8px",
-          border: "1px solid #ccc",
-          cursor: "pointer",
-        }}
-      >
-        {isHidden ? "Mostrar" : "Ocultar"}
-      </button>
+        <button type="button" onClick={handleToggleHidden} disabled={loading}>
+          {loading ? "Procesando..." : isHidden ? "Mostrar" : "Ocultar"}
+        </button>
 
-      <button
-        type="button"
-        onClick={handleDelete}
-        disabled={loading}
-        style={{
-          padding: "0.4rem 0.8rem",
-          borderRadius: "8px",
-          border: "1px solid #ccc",
-          cursor: "pointer",
-        }}
-      >
-        Borrar
-      </button>
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={loading}
+          style={{
+            background: "transparent",
+            color: "var(--text)",
+            border: "1px solid var(--border)",
+          }}
+        >
+          Borrar
+        </button>
+      </div>
+
+      {message && (
+        <p className="subtle-text" style={{ marginTop: "0.5rem", marginBottom: 0 }}>
+          {message}
+        </p>
+      )}
     </div>
   );
 }
