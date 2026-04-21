@@ -168,7 +168,7 @@ export default function PublicarPage() {
         </p>
       </section>
 
-      <section className="card top-space" style={{ maxWidth: "760px" }}>
+      <section className="card top-space" style={{ maxWidth: "760px", marginInline: "auto" }}>
         {message && (
           <p
             style={{

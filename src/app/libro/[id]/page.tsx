@@ -161,6 +161,7 @@ export default async function LibroDetallePage({ params }: PageProps) {
                 style={{
                   width: "100%",
                   maxWidth: "320px",
+                  margin: "0 auto",
                   borderRadius: "16px",
                   objectFit: "cover",
                   border: "1px solid var(--border)",
@@ -172,6 +173,7 @@ export default async function LibroDetallePage({ params }: PageProps) {
                   width: "100%",
                   maxWidth: "320px",
                   height: "430px",
+                  margin: "0 auto",
                   background: "var(--surface-soft)",
                   borderRadius: "16px",
                   border: "1px solid var(--border)",

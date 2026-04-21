@@ -62,7 +62,7 @@ export default async function PerfilPage() {
         <h1 className="section-title" style={{ color: "var(--accent)" }}>
           Mi perfil
         </h1>
-        <p className="subtle-text" style={{ marginTop: 0 }}>
+        <p className="subtle-text" style={{ marginTop: 0, wordBreak: "break-word" }}>
           {user.email}
         </p>
       </section>

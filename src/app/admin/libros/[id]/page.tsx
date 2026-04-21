@@ -133,7 +133,9 @@ export default async function AdminBookPage({ params }: PageProps) {
           Gestionar libro
         </h1>
 
-        <h2 style={{ marginTop: 0, marginBottom: "0.35rem" }}>{book.title}</h2>
+        <h2 style={{ marginTop: 0, marginBottom: "0.35rem", wordBreak: "break-word" }}>
+          {book.title}
+        </h2>
         <p className="subtle-text" style={{ marginTop: 0 }}>
           {book.author}
         </p>
