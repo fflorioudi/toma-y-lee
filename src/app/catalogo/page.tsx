@@ -40,7 +40,7 @@ type ReviewRating = {
   rating: number | null;
 };
 
-function calcularPromedios(reviews: ReviewRating[]) {
+function calcularEstadisticas(reviews: ReviewRating[]) {
   const map = new Map<string, { total: number; count: number }>();
 
   for (const review of reviews) {
@@ -52,13 +52,16 @@ function calcularPromedios(reviews: ReviewRating[]) {
     map.set(review.book_id, current);
   }
 
-  const averages = new Map<string, number>();
+  const stats = new Map<string, { average: number; count: number }>();
 
   for (const [bookId, data] of map.entries()) {
-    averages.set(bookId, data.total / data.count);
+    stats.set(bookId, {
+      average: data.total / data.count,
+      count: data.count,
+    });
   }
 
-  return averages;
+  return stats;
 }
 
 function getCategoryName(book: Book) {
@@ -139,7 +142,7 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
   const typedBooks = (books || []) as Book[];
   const bookIds = typedBooks.map((book) => book.id);
 
-  let ratingsMap = new Map<string, number>();
+  let ratingsStatsMap = new Map<string, { average: number; count: number }>();
 
   if (bookIds.length > 0) {
     const { data: reviewsData } = await supabase
@@ -149,13 +152,13 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
       .eq("is_hidden", false);
 
     const typedReviews = (reviewsData || []) as ReviewRating[];
-    ratingsMap = calcularPromedios(typedReviews);
+    ratingsStatsMap = calcularEstadisticas(typedReviews);
   }
 
   const filteredBooks = typedBooks.filter((book) => {
     if (minRating <= 0) return true;
-    const average = ratingsMap.get(book.id);
-    return average !== undefined && average >= minRating;
+    const stats = ratingsStatsMap.get(book.id);
+    return stats !== undefined && stats.average >= minRating;
   });
 
   return (
@@ -165,21 +168,13 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
           Catálogo
         </h1>
         <p className="subtle-text" style={{ marginTop: 0, maxWidth: "760px" }}>
-          Explorá los libros compartidos por la comunidad, filtrá por categoría,
-          tipo de contenido y valoración.
+          Explorá los libros compartidos por la comunidad y encontrá lecturas por
+          categoría, formato y valoración.
         </p>
       </section>
 
       <section className="card top-space">
-        <form
-          method="GET"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr auto",
-            gap: "1rem",
-            alignItems: "end",
-          }}
-        >
+        <form method="GET" className="responsive-filter-grid">
           <div className="form-field">
             <label htmlFor="q">Buscar</label>
             <input
@@ -239,11 +234,18 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
 
       <section className="top-space-lg">
         {filteredBooks.length === 0 ? (
-          <p className="empty-state">No se encontraron libros.</p>
+          <div className="card" style={{ textAlign: "center", padding: "2rem" }}>
+            <h2 style={{ marginTop: 0, color: "var(--accent)" }}>
+              No encontramos libros
+            </h2>
+            <p className="empty-state" style={{ marginBottom: 0 }}>
+              Probá cambiar los filtros o hacer una búsqueda más amplia.
+            </p>
+          </div>
         ) : (
           <div className="grid-auto">
             {filteredBooks.map((book) => {
-              const average = ratingsMap.get(book.id);
+              const stats = ratingsStatsMap.get(book.id);
 
               return (
                 <Link
@@ -296,9 +298,17 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
                       <strong>Categoría:</strong> {getCategoryName(book)}
                     </p>
 
-                    <p style={{ marginTop: "0.35rem", fontSize: "0.95rem" }}>
-                      <strong>Valoración:</strong>{" "}
-                      {average ? `⭐ ${average.toFixed(1)}` : "Sin reseñas"}
+                    <p
+                      style={{
+                        marginTop: "0.45rem",
+                        fontSize: "0.95rem",
+                        color: "var(--accent)",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {stats
+                        ? `⭐ ${stats.average.toFixed(1)} · ${stats.count} reseña${stats.count === 1 ? "" : "s"}`
+                        : "Sin reseñas"}
                     </p>
 
                     <p className="subtle-text" style={{ marginTop: "0.75rem" }}>

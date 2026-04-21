@@ -97,7 +97,7 @@ main {
 
 .display-title {
   font-family: "Cormorant Garamond", serif;
-  font-size: clamp(3.4rem, 8vw, 6rem);
+  font-size: clamp(3rem, 10vw, 6rem);
   line-height: 0.95;
   letter-spacing: -0.03em;
   margin: 0;
@@ -294,6 +294,19 @@ main {
   font-weight: 500;
 }
 
+.responsive-filter-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+  gap: 1rem;
+  align-items: end;
+}
+
+@media (max-width: 1024px) {
+  .responsive-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 900px) {
   .grid-2 {
     grid-template-columns: 1fr;
@@ -302,11 +315,15 @@ main {
   .section-title {
     font-size: 2rem;
   }
+
+  .page-container {
+    padding: 1.4rem 1rem 2.6rem;
+  }
 }
 
 @media (max-width: 640px) {
   .page-container {
-    padding: 1.1rem 1rem 2.5rem;
+    padding: 1rem 0.9rem 2.2rem;
   }
 
   .grid-auto {
@@ -330,19 +347,25 @@ main {
   }
 
   .section-title {
-    font-size: 1.8rem;
+    font-size: 1.75rem;
   }
 
   .hero-band {
     border-radius: 18px;
     font-size: 1rem;
+    padding: 0.9rem 1rem;
   }
 
   .footer-inner {
     align-items: flex-start;
+    padding: 1.3rem 1rem 1.7rem;
   }
 
   .footer-brand {
     width: 100%;
+  }
+
+  .responsive-filter-grid {
+    grid-template-columns: 1fr;
   }
 }

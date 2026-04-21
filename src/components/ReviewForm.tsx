@@ -12,8 +12,8 @@ export default function ReviewForm({ bookId }: Props) {
   const supabase = createClient();
   const router = useRouter();
 
-  const [reviewText, setReviewText] = useState("");
   const [rating, setRating] = useState("5");
+  const [reviewText, setReviewText] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -35,16 +35,12 @@ export default function ReviewForm({ bookId }: Props) {
     const { error } = await supabase.from("reviews").insert({
       book_id: bookId,
       user_id: user.id,
-      review_text: reviewText,
+      review_text: reviewText.trim() || null,
       rating: Number(rating),
     });
 
     if (error) {
-      if (error.message.toLowerCase().includes("duplicate") || error.message.toLowerCase().includes("unique")) {
-        setMessage("Ya dejaste una reseña para este libro.");
-      } else {
-        setMessage(error.message);
-      }
+      setMessage(error.message);
       setLoading(false);
       return;
     }
@@ -57,62 +53,42 @@ export default function ReviewForm({ bookId }: Props) {
   };
 
   return (
-    <section style={{ marginTop: "3rem" }}>
-      <h2>Dejar una reseña</h2>
+    <form onSubmit={handleSubmit} className="form-grid" style={{ marginTop: "1rem" }}>
+      {message && (
+        <p style={{ margin: 0, color: message.includes("✅") ? "var(--accent)" : "var(--text)" }}>
+          {message}
+        </p>
+      )}
 
-      {message && <p style={{ marginTop: "1rem" }}>{message}</p>}
-
-      <form onSubmit={handleSubmit} style={{ marginTop: "1rem" }}>
-        <div style={{ marginBottom: "1rem" }}>
-          <label htmlFor="rating">Puntaje</label>
-          <select
-            id="rating"
-            value={rating}
-            onChange={(e) => setRating(e.target.value)}
-            style={{
-              display: "block",
-              marginTop: "0.4rem",
-              padding: "0.6rem",
-              width: "100%",
-            }}
-          >
-            <option value="1">1 / 5</option>
-            <option value="2">2 / 5</option>
-            <option value="3">3 / 5</option>
-            <option value="4">4 / 5</option>
-            <option value="5">5 / 5</option>
-          </select>
-        </div>
-
-        <div style={{ marginBottom: "1rem" }}>
-          <label htmlFor="reviewText">Tu reseña</label>
-          <textarea
-            id="reviewText"
-            value={reviewText}
-            onChange={(e) => setReviewText(e.target.value)}
-            required
-            rows={5}
-            style={{
-              display: "block",
-              marginTop: "0.4rem",
-              padding: "0.7rem",
-              width: "100%",
-            }}
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            padding: "0.8rem 1rem",
-            borderRadius: "10px",
-            cursor: "pointer",
-          }}
+      <div className="form-field">
+        <label htmlFor="rating">Puntaje</label>
+        <select
+          id="rating"
+          value={rating}
+          onChange={(e) => setRating(e.target.value)}
         >
-          {loading ? "Publicando..." : "Publicar reseña"}
-        </button>
-      </form>
-    </section>
+          <option value="5">5 / 5</option>
+          <option value="4">4 / 5</option>
+          <option value="3">3 / 5</option>
+          <option value="2">2 / 5</option>
+          <option value="1">1 / 5</option>
+        </select>
+      </div>
+
+      <div className="form-field">
+        <label htmlFor="reviewText">Tu reseña</label>
+        <textarea
+          id="reviewText"
+          value={reviewText}
+          onChange={(e) => setReviewText(e.target.value)}
+          rows={4}
+          placeholder="Contá por qué recomendarías este libro"
+        />
+      </div>
+
+      <button type="submit" disabled={loading}>
+        {loading ? "Publicando..." : "Publicar reseña"}
+      </button>
+    </form>
   );
 }

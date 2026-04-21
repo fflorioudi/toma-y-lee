@@ -39,10 +39,7 @@ export default async function RandomBook() {
         Te recomendamos esta lectura al azar.
       </p>
 
-      <div
-        className="grid-2"
-        style={{ marginTop: "1rem", gridTemplateColumns: "190px 1fr" }}
-      >
+      <div className="grid-2" style={{ marginTop: "1rem" }}>
         <div>
           {book.cover_url ? (
             <img
@@ -50,7 +47,9 @@ export default async function RandomBook() {
               alt={book.title}
               style={{
                 width: "100%",
-                height: "275px",
+                maxWidth: "320px",
+                height: "auto",
+                aspectRatio: "3 / 4",
                 objectFit: "cover",
                 borderRadius: "14px",
                 border: "1px solid var(--border)",
@@ -60,7 +59,8 @@ export default async function RandomBook() {
             <div
               style={{
                 width: "100%",
-                height: "275px",
+                maxWidth: "320px",
+                aspectRatio: "3 / 4",
                 background: "var(--surface-soft)",
                 borderRadius: "14px",
                 border: "1px solid var(--border)",

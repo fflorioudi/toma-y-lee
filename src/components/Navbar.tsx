@@ -40,11 +40,11 @@ export default async function Navbar() {
         style={{
           maxWidth: "1120px",
           margin: "0 auto",
-          padding: "1rem 1.25rem",
+          padding: "1rem",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          gap: "1rem",
+          gap: "0.9rem",
           flexWrap: "wrap",
         }}
       >
@@ -54,7 +54,7 @@ export default async function Navbar() {
             textDecoration: "none",
             color: "var(--text)",
             fontWeight: 700,
-            fontSize: "1.25rem",
+            fontSize: "1.2rem",
             letterSpacing: "-0.02em",
           }}
         >
@@ -64,7 +64,7 @@ export default async function Navbar() {
         <div
           style={{
             display: "flex",
-            gap: "0.95rem",
+            gap: "0.8rem",
             alignItems: "center",
             flexWrap: "wrap",
             justifyContent: "flex-end",
@@ -97,7 +97,17 @@ export default async function Navbar() {
                 </Link>
               )}
 
-              <span style={{ color: "var(--text-soft)" }}>{user.email}</span>
+              <span
+                style={{
+                  color: "var(--text-soft)",
+                  maxWidth: "220px",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {user.email}
+              </span>
 
               <form action="/logout" method="post">
                 <button

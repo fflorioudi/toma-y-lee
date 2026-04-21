@@ -9,23 +9,22 @@ type Props = {
 
 export default function ReportReviewButton({ reviewId }: Props) {
   const supabase = createClient();
+  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleReport = async () => {
-    const reason = window.prompt(
-      "Motivo del reporte: spam / ofensiva / fuera de tema / inapropiada"
-    );
-
+    const reason = window.prompt("Motivo del reporte:");
     if (!reason) return;
 
     setLoading(true);
+    setMessage("");
 
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
     if (!user) {
-      alert("Tenés que iniciar sesión para reportar.");
+      setMessage("Tenés que iniciar sesión para reportar.");
       setLoading(false);
       return;
     }
@@ -37,29 +36,35 @@ export default function ReportReviewButton({ reviewId }: Props) {
     });
 
     if (error) {
-      alert(error.message);
+      setMessage(error.message);
       setLoading(false);
       return;
     }
 
-    alert("Reseña reportada.");
+    setMessage("Reporte enviado.");
     setLoading(false);
   };
 
   return (
-    <button
-      type="button"
-      onClick={handleReport}
-      disabled={loading}
-      style={{
-        marginTop: "0.8rem",
-        padding: "0.4rem 0.8rem",
-        borderRadius: "8px",
-        border: "1px solid #ccc",
-        cursor: "pointer",
-      }}
-    >
-      Reportar reseña
-    </button>
+    <div>
+      <button
+        type="button"
+        onClick={handleReport}
+        disabled={loading}
+        style={{
+          background: "transparent",
+          color: "var(--text)",
+          border: "1px solid var(--border)",
+        }}
+      >
+        {loading ? "Enviando..." : "Reportar reseña"}
+      </button>
+
+      {message && (
+        <p className="subtle-text" style={{ marginTop: "0.5rem", marginBottom: 0 }}>
+          {message}
+        </p>
+      )}
+    </div>
   );
 }

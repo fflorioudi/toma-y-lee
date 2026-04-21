@@ -59,6 +59,14 @@ function getFullName(profile?: ProfileRow | null) {
   return fullName || "Usuario";
 }
 
+function formatDate(date: string) {
+  return new Date(date).toLocaleDateString("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
 export default async function LibroDetallePage({ params }: PageProps) {
   const { id } = await params;
   const supabase = await createClient();
@@ -131,6 +139,7 @@ export default async function LibroDetallePage({ params }: PageProps) {
   }));
 
   const promedio = calcularPromedio(reviewsWithUser);
+  const reviewsCount = reviewsWithUser.length;
 
   return (
     <main className="page-container">
@@ -187,8 +196,17 @@ export default async function LibroDetallePage({ params }: PageProps) {
               <strong>Subido por:</strong> {getFullName(uploaderProfile)}
             </p>
 
-            <p style={{ marginTop: "0.9rem", fontSize: "1rem", color: "var(--accent)" }}>
-              {promedio ? `⭐ ${promedio}/5` : "Sin reseñas todavía"}
+            <p
+              style={{
+                marginTop: "0.9rem",
+                fontSize: "1rem",
+                color: "var(--accent)",
+                fontWeight: 600,
+              }}
+            >
+              {promedio
+                ? `⭐ ${promedio}/5 · ${reviewsCount} reseña${reviewsCount === 1 ? "" : "s"}`
+                : "Sin reseñas todavía"}
             </p>
 
             <div className="top-space">
@@ -257,20 +275,36 @@ export default async function LibroDetallePage({ params }: PageProps) {
         </h2>
 
         {reviewsWithUser.length === 0 ? (
-          <p className="empty-state">Todavía no hay reseñas para este libro.</p>
+          <div className="card">
+            <p className="empty-state" style={{ margin: 0 }}>
+              Todavía no hay reseñas para este libro. Podés ser la primera persona en compartir una.
+            </p>
+          </div>
         ) : (
           <div className="list-stack">
             {reviewsWithUser.map((review) => (
               <article key={review.id} className="card">
-                <p style={{ marginTop: 0, marginBottom: "0.5rem" }}>
-                  <strong>{review.reviewer_name}</strong>
-                  {" · "}
-                  <span className="subtle-text">
-                    Puntaje: {review.rating ?? "-"}/5
-                  </span>
-                </p>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: "1rem",
+                    flexWrap: "wrap",
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  <p style={{ margin: 0 }}>
+                    <strong>{review.reviewer_name}</strong>
+                  </p>
 
-                <p className="subtle-text">{review.review_text || "Sin texto."}</p>
+                  <p className="subtle-text" style={{ margin: 0 }}>
+                    {review.rating ?? "-"} / 5 · {formatDate(review.created_at)}
+                  </p>
+                </div>
+
+                <p className="subtle-text" style={{ marginBottom: 0 }}>
+                  {review.review_text || "Sin texto."}
+                </p>
 
                 <div style={{ marginTop: "0.9rem" }}>
                   <ReportReviewButton reviewId={review.id} />
