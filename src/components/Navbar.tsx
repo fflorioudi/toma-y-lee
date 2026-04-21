@@ -31,7 +31,7 @@ export default async function Navbar() {
         position: "sticky",
         top: 0,
         zIndex: 50,
-        background: "rgba(243, 243, 241, 0.94)",
+        background: "rgba(243, 243, 241, 0.96)",
         backdropFilter: "blur(8px)",
         borderBottom: "1px solid var(--border)",
       }}
@@ -41,69 +41,94 @@ export default async function Navbar() {
           maxWidth: "1120px",
           margin: "0 auto",
           padding: "1rem",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "0.9rem",
-          flexWrap: "wrap",
         }}
       >
-        <Link
-          href="/"
-          style={{
-            textDecoration: "none",
-            color: "var(--text)",
-            fontWeight: 700,
-            fontSize: "1.2rem",
-            letterSpacing: "-0.02em",
-          }}
-        >
-          Toma y lee
-        </Link>
-
         <div
           style={{
             display: "flex",
-            gap: "0.8rem",
-            alignItems: "center",
-            flexWrap: "wrap",
-            justifyContent: "flex-end",
+            flexDirection: "column",
+            gap: "0.9rem",
           }}
         >
-          <Link href="/catalogo" style={{ textDecoration: "none" }}>
-            Catálogo
-          </Link>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Link
+              href="/"
+              style={{
+                textDecoration: "none",
+                color: "var(--text)",
+                fontWeight: 700,
+                fontSize: "1.2rem",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              Toma y lee
+            </Link>
+          </div>
 
-          {user ? (
-            <>
-              <Link href="/publicar" style={{ textDecoration: "none" }}>
-                Publicar
-              </Link>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              gap: "1rem",
+              flexWrap: "wrap",
+            }}
+          >
+            <Link href="/catalogo" style={{ textDecoration: "none" }}>
+              Catálogo
+            </Link>
 
-              <Link href="/perfil" style={{ textDecoration: "none" }}>
-                Perfil
-              </Link>
-
-              {isAdmin && (
-                <Link
-                  href="/admin"
-                  style={{
-                    textDecoration: "none",
-                    color: "var(--accent)",
-                    fontWeight: 700,
-                  }}
-                >
-                  Admin
+            {user ? (
+              <>
+                <Link href="/publicar" style={{ textDecoration: "none" }}>
+                  Publicar
                 </Link>
-              )}
 
+                <Link href="/perfil" style={{ textDecoration: "none" }}>
+                  Perfil
+                </Link>
+
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    style={{
+                      textDecoration: "none",
+                      color: "var(--accent)",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Admin
+                  </Link>
+                )}
+              </>
+            ) : (
+              <Link href="/login" style={{ textDecoration: "none" }}>
+                Login
+              </Link>
+            )}
+          </div>
+
+          {user && (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: "0.8rem",
+                flexWrap: "wrap",
+              }}
+            >
               <span
                 style={{
                   color: "var(--text-soft)",
-                  maxWidth: "220px",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
+                  fontSize: "0.95rem",
+                  textAlign: "center",
+                  wordBreak: "break-word",
                 }}
               >
                 {user.email}
@@ -121,11 +146,7 @@ export default async function Navbar() {
                   Cerrar sesión
                 </button>
               </form>
-            </>
-          ) : (
-            <Link href="/login" className="secondary-link">
-              Login
-            </Link>
+            </div>
           )}
         </div>
       </div>
