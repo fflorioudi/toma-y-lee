@@ -15,6 +15,7 @@ export default function ReviewForm({ bookId }: Props) {
   const [rating, setRating] = useState("5");
   const [reviewText, setReviewText] = useState("");
   const [message, setMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,6 +29,7 @@ export default function ReviewForm({ bookId }: Props) {
 
     if (!user) {
       setMessage("Tenés que iniciar sesión para dejar una reseña.");
+      setIsSuccess(false);
       setLoading(false);
       return;
     }
@@ -41,11 +43,13 @@ export default function ReviewForm({ bookId }: Props) {
 
     if (error) {
       setMessage(error.message);
+      setIsSuccess(false);
       setLoading(false);
       return;
     }
 
-    setMessage("Reseña publicada correctamente ✅");
+    setMessage("Reseña publicada correctamente");
+    setIsSuccess(true);
     setReviewText("");
     setRating("5");
     setLoading(false);
@@ -55,7 +59,7 @@ export default function ReviewForm({ bookId }: Props) {
   return (
     <form onSubmit={handleSubmit} className="form-grid" style={{ marginTop: "1rem" }}>
       {message && (
-        <p style={{ margin: 0, color: message.includes("✅") ? "var(--accent)" : "var(--text)" }}>
+        <p className={isSuccess ? "message-success" : "message-error"}>
           {message}
         </p>
       )}
@@ -82,7 +86,6 @@ export default function ReviewForm({ bookId }: Props) {
           value={reviewText}
           onChange={(e) => setReviewText(e.target.value)}
           rows={4}
-          placeholder="Contá por qué recomendarías este libro"
         />
       </div>
 

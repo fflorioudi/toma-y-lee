@@ -28,8 +28,10 @@ export default function AdminBookActions({ bookId, isHidden }: Props) {
   const supabase = createClient();
   const router = useRouter();
   const pathname = usePathname();
+
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const handleToggleHidden = async () => {
     setLoading(true);
@@ -42,11 +44,13 @@ export default function AdminBookActions({ bookId, isHidden }: Props) {
 
     if (error) {
       setMessage(error.message);
+      setIsSuccess(false);
       setLoading(false);
       return;
     }
 
     setMessage(isHidden ? "Libro visible nuevamente." : "Libro ocultado.");
+    setIsSuccess(true);
     router.refresh();
     setLoading(false);
   };
@@ -69,22 +73,54 @@ export default function AdminBookActions({ bookId, isHidden }: Props) {
 
     if (bookError || !book) {
       setMessage(bookError?.message || "No se pudo obtener el libro.");
+      setIsSuccess(false);
       setLoading(false);
       return;
     }
 
+    const storageErrors: string[] = [];
+
     if (book.pdf_url) {
       const pdfPath = getStoragePathFromPublicUrl(book.pdf_url, "book-pdfs");
+
       if (pdfPath) {
-        await supabase.storage.from("book-pdfs").remove([pdfPath]);
+        const { error: pdfDeleteError } = await supabase.storage
+          .from("book-pdfs")
+          .remove([pdfPath]);
+
+        if (
+          pdfDeleteError &&
+          !pdfDeleteError.message.toLowerCase().includes("not found")
+        ) {
+          storageErrors.push(`PDF: ${pdfDeleteError.message}`);
+        }
       }
     }
 
     if (book.cover_url) {
       const coverPath = getStoragePathFromPublicUrl(book.cover_url, "book-covers");
+
       if (coverPath) {
-        await supabase.storage.from("book-covers").remove([coverPath]);
+        const { error: coverDeleteError } = await supabase.storage
+          .from("book-covers")
+          .remove([coverPath]);
+
+        if (
+          coverDeleteError &&
+          !coverDeleteError.message.toLowerCase().includes("not found")
+        ) {
+          storageErrors.push(`Portada: ${coverDeleteError.message}`);
+        }
       }
+    }
+
+    if (storageErrors.length > 0) {
+      setMessage(
+        `No se pudieron borrar algunos archivos del storage: ${storageErrors.join(" | ")}`
+      );
+      setIsSuccess(false);
+      setLoading(false);
+      return;
     }
 
     const { error: deleteError } = await supabase
@@ -94,9 +130,13 @@ export default function AdminBookActions({ bookId, isHidden }: Props) {
 
     if (deleteError) {
       setMessage(deleteError.message);
+      setIsSuccess(false);
       setLoading(false);
       return;
     }
+
+    setMessage("Libro eliminado.");
+    setIsSuccess(true);
 
     if (pathname.startsWith("/admin/libros/")) {
       router.push("/admin");
@@ -133,7 +173,7 @@ export default function AdminBookActions({ bookId, isHidden }: Props) {
       </div>
 
       {message && (
-        <p className="subtle-text" style={{ marginTop: "0.5rem", marginBottom: 0 }}>
+        <p className={isSuccess ? "message-success" : "message-error"}>
           {message}
         </p>
       )}

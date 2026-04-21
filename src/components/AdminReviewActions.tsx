@@ -12,8 +12,10 @@ type Props = {
 export default function AdminReviewActions({ reviewId, isHidden }: Props) {
   const supabase = createClient();
   const router = useRouter();
+
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const handleToggleHidden = async () => {
     setLoading(true);
@@ -26,11 +28,13 @@ export default function AdminReviewActions({ reviewId, isHidden }: Props) {
 
     if (error) {
       setMessage(error.message);
+      setIsSuccess(false);
       setLoading(false);
       return;
     }
 
-    setMessage(isHidden ? "Reseña visible nuevamente." : "Reseña ocultada.");
+    setMessage("Estado actualizado");
+    setIsSuccess(true);
     router.refresh();
     setLoading(false);
   };
@@ -49,11 +53,13 @@ export default function AdminReviewActions({ reviewId, isHidden }: Props) {
 
     if (error) {
       setMessage(error.message);
+      setIsSuccess(false);
       setLoading(false);
       return;
     }
 
-    setMessage("Reseña eliminada.");
+    setMessage("Reseña eliminada");
+    setIsSuccess(true);
     router.refresh();
     setLoading(false);
   };
@@ -61,26 +67,17 @@ export default function AdminReviewActions({ reviewId, isHidden }: Props) {
   return (
     <div>
       <div className="actions-row">
-        <button type="button" onClick={handleToggleHidden} disabled={loading}>
+        <button onClick={handleToggleHidden} disabled={loading}>
           {loading ? "Procesando..." : isHidden ? "Mostrar" : "Ocultar"}
         </button>
 
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={loading}
-          style={{
-            background: "transparent",
-            color: "var(--text)",
-            border: "1px solid var(--border)",
-          }}
-        >
+        <button onClick={handleDelete} disabled={loading}>
           Borrar
         </button>
       </div>
 
       {message && (
-        <p className="subtle-text" style={{ marginTop: "0.5rem", marginBottom: 0 }}>
+        <p className={isSuccess ? "message-success" : "message-error"}>
           {message}
         </p>
       )}

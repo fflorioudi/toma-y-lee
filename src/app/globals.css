@@ -368,4 +368,13 @@ main {
   .responsive-filter-grid {
     grid-template-columns: 1fr;
   }
+  .message-success {
+  color: #2e7d32;
+  font-weight: 500;
+}
+
+.message-error {
+  color: #b42318;
+  font-weight: 500;
+}
 }

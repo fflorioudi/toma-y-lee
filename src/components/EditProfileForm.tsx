@@ -19,6 +19,7 @@ export default function EditProfileForm({
   const [name, setName] = useState(initialName);
   const [lastName, setLastName] = useState(initialLastName);
   const [message, setMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -32,6 +33,7 @@ export default function EditProfileForm({
 
     if (!user) {
       setMessage("Tenés que iniciar sesión.");
+      setIsSuccess(false);
       setLoading(false);
       return;
     }
@@ -46,11 +48,13 @@ export default function EditProfileForm({
 
     if (error) {
       setMessage(error.message);
+      setIsSuccess(false);
       setLoading(false);
       return;
     }
 
-    setMessage("Perfil actualizado correctamente ✅");
+    setMessage("Perfil actualizado correctamente");
+    setIsSuccess(true);
     setLoading(false);
     router.refresh();
   };
@@ -58,12 +62,7 @@ export default function EditProfileForm({
   return (
     <form onSubmit={handleSave} className="form-grid" style={{ marginTop: "1rem", maxWidth: "520px" }}>
       {message && (
-        <p
-          style={{
-            marginBottom: "0.5rem",
-            color: message.includes("✅") ? "var(--accent)" : "var(--text)",
-          }}
-        >
+        <p className={isSuccess ? "message-success" : "message-error"}>
           {message}
         </p>
       )}
