@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import ReviewForm from "@/components/ReviewForm";
 import ReportBookButton from "@/components/ReportBookButton";
 import ReportReviewButton from "@/components/ReportReviewButton";
+import FavoriteButton from "@/components/FavoriteButton";
 
 type PageProps = {
   params: Promise<{
@@ -71,6 +72,10 @@ function formatDate(date: string) {
 export default async function LibroDetallePage({ params }: PageProps) {
   const { id } = await params;
   const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { data: book, error: bookError } = await supabase
     .from("books")
@@ -159,6 +164,19 @@ export default async function LibroDetallePage({ params }: PageProps) {
       .limit(4);
 
     relatedBooks = relatedData || [];
+  }
+
+  let initialIsFavorite = false;
+
+  if (user) {
+    const { data: favoriteData } = await supabase
+      .from("favorites")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("book_id", typedBook.id)
+      .maybeSingle();
+
+    initialIsFavorite = !!favoriteData;
   }
 
   return (
@@ -284,6 +302,11 @@ export default async function LibroDetallePage({ params }: PageProps) {
                   Ver PDF
                 </a>
               )}
+
+              <FavoriteButton
+                bookId={typedBook.id}
+                initialIsFavorite={initialIsFavorite}
+              />
 
               <ReportBookButton bookId={typedBook.id} />
             </div>

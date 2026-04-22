@@ -11,11 +11,36 @@ type Book = {
   cover_url: string | null;
 };
 
+type FavoriteBook = {
+  id: string;
+  books:
+    | {
+        id: string;
+        title: string;
+        author: string;
+        cover_url: string | null;
+      }
+    | {
+        id: string;
+        title: string;
+        author: string;
+        cover_url: string | null;
+      }[]
+    | null;
+};
+
 type Profile = {
   name: string | null;
   last_name: string | null;
   role: string | null;
 };
+
+function getFavoriteBookData(favorite: FavoriteBook) {
+  if (Array.isArray(favorite.books)) {
+    return favorite.books[0] || null;
+  }
+  return favorite.books || null;
+}
 
 export default async function PerfilPage() {
   const supabase = await createClient();
@@ -45,6 +70,20 @@ export default async function PerfilPage() {
     .select("*", { count: "exact", head: true })
     .eq("user_id", user.id);
 
+  const { data: favoritesData } = await supabase
+    .from("favorites")
+    .select(`
+      id,
+      books (
+        id,
+        title,
+        author,
+        cover_url
+      )
+    `)
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
   if (error) {
     return (
       <main className="page-container">
@@ -55,6 +94,7 @@ export default async function PerfilPage() {
   }
 
   const typedBooks = (books || []) as Book[];
+  const typedFavorites = (favoritesData || []) as FavoriteBook[];
   const typedProfile = (profile || {
     name: "",
     last_name: "",
@@ -114,6 +154,22 @@ export default async function PerfilPage() {
               {reviewsCount || 0}
             </p>
           </div>
+
+          <div className="card" style={{ boxShadow: "none" }}>
+            <p className="subtle-text" style={{ marginTop: 0 }}>
+              Favoritos guardados
+            </p>
+            <p
+              style={{
+                margin: 0,
+                fontSize: "1.8rem",
+                fontWeight: 700,
+                color: "var(--accent)",
+              }}
+            >
+              {typedFavorites.length}
+            </p>
+          </div>
         </div>
       </section>
 
@@ -123,6 +179,64 @@ export default async function PerfilPage() {
           initialName={typedProfile.name || ""}
           initialLastName={typedProfile.last_name || ""}
         />
+      </section>
+
+      <section className="top-space-lg">
+        <h2 className="section-title" style={{ fontSize: "2rem", color: "var(--accent)" }}>
+          Mis favoritos
+        </h2>
+
+        {typedFavorites.length === 0 ? (
+          <p className="empty-state">Todavía no guardaste libros en favoritos.</p>
+        ) : (
+          <div className="grid-auto">
+            {typedFavorites.map((favorite) => {
+              const book = getFavoriteBookData(favorite);
+              if (!book) return null;
+
+              return (
+                <article key={favorite.id} className="card card-hover">
+                  {book.cover_url ? (
+                    <img
+                      src={book.cover_url}
+                      alt={book.title}
+                      style={{
+                        width: "100%",
+                        height: "220px",
+                        objectFit: "cover",
+                        borderRadius: "14px",
+                        border: "1px solid var(--border)",
+                        marginBottom: "0.9rem",
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "220px",
+                        background: "var(--surface-soft)",
+                        borderRadius: "14px",
+                        border: "1px solid var(--border)",
+                        marginBottom: "0.9rem",
+                      }}
+                    />
+                  )}
+
+                  <h3 style={{ marginTop: 0, marginBottom: "0.35rem" }}>{book.title}</h3>
+                  <p className="subtle-text" style={{ marginTop: 0 }}>
+                    {book.author}
+                  </p>
+
+                  <div className="actions-row" style={{ marginTop: "1rem" }}>
+                    <Link href={`/libro/${book.id}`} className="primary-link">
+                      Ver libro
+                    </Link>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       <section className="top-space-lg">
