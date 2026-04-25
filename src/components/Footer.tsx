@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="footer-inner">
         <div className="footer-brand">
           <Image
-            src="/logo-jar.png"
+            src="/logo.png"
             alt="Logo de la JAR"
             width={56}
             height={56}

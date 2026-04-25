@@ -82,10 +82,11 @@ export default function ReviewForm({ bookId }: Props) {
       <div className="form-field">
         <label htmlFor="reviewText">Tu reseña</label>
         <textarea
-          id="reviewText"
-          value={reviewText}
-          onChange={(e) => setReviewText(e.target.value)}
-          rows={4}
+            id="reviewText"
+            value={reviewText}
+            onChange={(e) => setReviewText(e.target.value)}
+            rows={4}
+            placeholder="¿Qué te dejó esta lectura? ¿A quién se la recomendarías?"
         />
       </div>
 

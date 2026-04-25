@@ -8,7 +8,7 @@ export default function HomePage() {
         <h1 className="display-title">Toma y lee</h1>
 
         <p className="section-subtitle" style={{ margin: "1.2rem auto 0" }}>
-          Biblioteca colaborativa de la JAR. Un lugar para compartir libros,
+          Biblioteca online colaborativa. Un lugar para compartir libros,
           reseñas y lecturas que acompañen la fe, la formación y la interioridad.
         </p>
 
