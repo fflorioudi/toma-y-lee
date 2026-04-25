@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="footer-brand">
           <Image
             src="/logo.png"
-            alt="Logo de la JAR"
+            alt="Logo de Toma y lee"
             width={56}
             height={56}
             className="footer-logo"
@@ -15,7 +15,7 @@ export default function Footer() {
 
           <div>
             <p className="footer-title">Toma y lee</p>
-            <p className="footer-text">Biblioteca colaborativa de la JAR.</p>
+            <p className="footer-text">Biblioteca online colaborativa.</p>
           </div>
         </div>
 
