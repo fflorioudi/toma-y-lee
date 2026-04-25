@@ -19,7 +19,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <p className="footer-sign">By Pipe</p>
+        <p className="footer-sign">®By Pipe</p>
       </div>
     </footer>
   );
