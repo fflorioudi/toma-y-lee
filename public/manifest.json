@@ -1,7 +1,7 @@
 {
   "name": "Toma y lee",
   "short_name": "Toma y lee",
-  "description": "Biblioteca colaborativa de la JAR",
+  "description": "Biblioteca colaborativa online",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

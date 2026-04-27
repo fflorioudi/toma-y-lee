@@ -163,7 +163,7 @@ export default function PublicarPage() {
           Compartir un libro
         </h1>
         <p className="subtle-text" style={{ marginTop: 0, maxWidth: "760px" }}>
-          Sumá una lectura a la biblioteca colaborativa de la JAR para que otros
+          Sumá una lectura a la biblioteca colaborativa para que otros
           también puedan encontrarla y aprovecharla.
         </p>
       </section>

@@ -1,6 +1,6 @@
 # Toma y lee
 
-Biblioteca colaborativa de la JAR.
+Biblioteca colaborativa online.
 
 ## Qué es
 

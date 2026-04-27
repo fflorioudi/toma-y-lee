@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "Toma y lee",
-  description: "Biblioteca colaborativa de la JAR",
+  description: "Biblioteca colaborativa online",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
