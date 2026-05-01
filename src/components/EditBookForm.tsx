@@ -15,6 +15,7 @@ type Book = {
   author: string;
   description: string | null;
   external_link: string | null;
+  audio_url: string | null;
   pdf_url: string | null;
   cover_url: string | null;
   category_id?: string | null;
@@ -47,6 +48,7 @@ export default function EditBookForm({ book }: Props) {
   const [author, setAuthor] = useState(book.author);
   const [description, setDescription] = useState(book.description || "");
   const [externalLink, setExternalLink] = useState(book.external_link || "");
+  const [audioLink, setAudioLink] = useState(book.audio_url || "");
   const [categoryId, setCategoryId] = useState(book.category_id || "");
 
   const [pdfFile, setPdfFile] = useState<File | null>(null);
@@ -91,9 +93,10 @@ export default function EditBookForm({ book }: Props) {
 
     const finalPdfWillExist = !!pdfFile || (!!book.pdf_url && !removePdf);
     const finalLinkWillExist = !!externalLink.trim();
+    const finalAudioWillExist = !!audioLink.trim();
 
-    if (!finalLinkWillExist && !finalPdfWillExist) {
-      setMessage("El libro debe tener un link o un PDF.");
+    if (!finalLinkWillExist && !finalPdfWillExist && !finalAudioWillExist) {
+      setMessage("El libro debe tener un link, un PDF o un audiolibro.");
       setLoading(false);
       return;
     }
@@ -192,6 +195,7 @@ export default function EditBookForm({ book }: Props) {
         author,
         description,
         external_link: externalLink.trim() || null,
+        audio_url: audioLink.trim() || null,
         cover_url: newCoverUrl,
         pdf_url: newPdfUrl,
         category_id: categoryId || null,
@@ -301,6 +305,22 @@ export default function EditBookForm({ book }: Props) {
           id="externalLink"
           value={externalLink}
           onChange={(e) => setExternalLink(e.target.value)}
+          style={{
+            display: "block",
+            width: "100%",
+            marginTop: "0.4rem",
+            padding: "0.7rem",
+          }}
+        />
+      </div>
+
+      <div style={{ marginBottom: "1rem" }}>
+        <label htmlFor="audioLink">Audiolibro</label>
+        <input
+          id="audioLink"
+          value={audioLink}
+          onChange={(e) => setAudioLink(e.target.value)}
+          placeholder="Link de YouTube, Spotify, Drive u otro audio"
           style={{
             display: "block",
             width: "100%",

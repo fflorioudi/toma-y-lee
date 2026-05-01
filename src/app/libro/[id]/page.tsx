@@ -20,6 +20,7 @@ type Book = {
   description: string | null;
   featured_quote: string | null;
   external_link: string | null;
+  audio_url: string | null;
   pdf_url: string | null;
   cover_url: string | null;
   category_id: string | null;
@@ -80,7 +81,7 @@ export default async function LibroDetallePage({ params }: PageProps) {
   const { data: book, error: bookError } = await supabase
     .from("books")
     .select(
-      "id, user_id, title, author, description, featured_quote, external_link, pdf_url, cover_url, category_id"
+      "id, user_id, title, author, description, featured_quote, external_link, audio_url, pdf_url, cover_url, category_id"
     )
     .eq("id", id)
     .eq("is_hidden", false)
@@ -300,6 +301,17 @@ export default async function LibroDetallePage({ params }: PageProps) {
                   className="secondary-link"
                 >
                   Ver PDF
+                </a>
+              )}
+
+              {typedBook.audio_url && (
+                <a
+                  href={typedBook.audio_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="primary-link"
+                >
+                  Escuchar audiolibro
                 </a>
               )}
 

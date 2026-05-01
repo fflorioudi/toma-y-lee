@@ -18,10 +18,12 @@ export default function PublicarPage() {
   const [author, setAuthor] = useState("");
   const [description, setDescription] = useState("");
   const [link, setLink] = useState("");
+  const [audioLink, setAudioLink] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [message, setMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -48,12 +50,14 @@ export default function PublicarPage() {
 
     if (!user) {
       setMessage("Tenés que estar logueado.");
+      setIsSuccess(false);
       setLoading(false);
       return;
     }
 
-    if (!link && !pdfFile) {
-      setMessage("Tenés que agregar un link o subir un PDF.");
+    if (!link && !pdfFile && !audioLink) {
+      setMessage("Tenés que agregar un link, subir un PDF o agregar un audiolibro.");
+      setIsSuccess(false);
       setLoading(false);
       return;
     }
@@ -66,6 +70,7 @@ export default function PublicarPage() {
 
       if (extension !== "pdf") {
         setMessage("Solo se permiten archivos PDF.");
+        setIsSuccess(false);
         setLoading(false);
         return;
       }
@@ -75,10 +80,14 @@ export default function PublicarPage() {
 
       const { error: uploadError } = await supabase.storage
         .from("book-pdfs")
-        .upload(filePath, pdfFile, { upsert: false });
+        .upload(filePath, pdfFile, {
+          upsert: false,
+          contentType: "application/pdf",
+        });
 
       if (uploadError) {
         setMessage(uploadError.message);
+        setIsSuccess(false);
         setLoading(false);
         return;
       }
@@ -95,6 +104,7 @@ export default function PublicarPage() {
 
       if (!validTypes.includes(coverFile.type)) {
         setMessage("La portada debe ser JPG, JPEG o PNG.");
+        setIsSuccess(false);
         setLoading(false);
         return;
       }
@@ -112,6 +122,7 @@ export default function PublicarPage() {
 
       if (uploadError) {
         setMessage(uploadError.message);
+        setIsSuccess(false);
         setLoading(false);
         return;
       }
@@ -129,6 +140,7 @@ export default function PublicarPage() {
       author,
       description,
       external_link: link || null,
+      audio_url: audioLink || null,
       pdf_url: pdfUrl,
       cover_url: coverUrl,
       category_id: categoryId || null,
@@ -136,15 +148,18 @@ export default function PublicarPage() {
 
     if (error) {
       setMessage(error.message);
+      setIsSuccess(false);
       setLoading(false);
       return;
     }
 
-    setMessage("Libro publicado correctamente ✅");
+    setMessage("Libro publicado correctamente");
+    setIsSuccess(true);
     setTitle("");
     setAuthor("");
     setDescription("");
     setLink("");
+    setAudioLink("");
     setCategoryId("");
     setPdfFile(null);
     setCoverFile(null);
@@ -163,20 +178,14 @@ export default function PublicarPage() {
           Compartir un libro
         </h1>
         <p className="subtle-text" style={{ marginTop: 0, maxWidth: "760px" }}>
-          Sumá una lectura a la biblioteca colaborativa para que otros
+          Sumá una lectura a la biblioteca colaborativa de la JAR para que otros
           también puedan encontrarla y aprovecharla.
         </p>
       </section>
 
       <section className="card top-space" style={{ maxWidth: "760px", marginInline: "auto" }}>
         {message && (
-          <p
-            style={{
-              marginTop: 0,
-              marginBottom: "1rem",
-              color: message.includes("✅") ? "var(--accent)" : "var(--text)",
-            }}
-          >
+          <p className={isSuccess ? "message-success" : "message-error"}>
             {message}
           </p>
         )}
@@ -235,9 +244,19 @@ export default function PublicarPage() {
             <label htmlFor="link">Link externo</label>
             <input
               id="link"
-              placeholder="Link del libro (opcional si subís PDF)"
+              placeholder="Link del libro, web o recurso externo"
               value={link}
               onChange={(e) => setLink(e.target.value)}
+            />
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="audioLink">Audiolibro</label>
+            <input
+              id="audioLink"
+              placeholder="Link de YouTube, Spotify, Drive u otro audio"
+              value={audioLink}
+              onChange={(e) => setAudioLink(e.target.value)}
             />
           </div>
 

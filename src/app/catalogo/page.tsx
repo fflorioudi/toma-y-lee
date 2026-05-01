@@ -19,6 +19,7 @@ type Book = {
   cover_url: string | null;
   pdf_url: string | null;
   external_link: string | null;
+  audio_url: string | null;
   category_id: string | null;
   categories:
     | {
@@ -99,6 +100,7 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
       cover_url,
       pdf_url,
       external_link,
+      audio_url,
       category_id,
       categories (
         name
@@ -116,6 +118,10 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
 
   if (type === "link") {
     query = query.not("external_link", "is", null);
+  }
+
+  if (type === "audio") {
+    query = query.not("audio_url", "is", null);
   }
 
   if (category !== "all") {
@@ -191,6 +197,7 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
               <option value="all">Todos</option>
               <option value="pdf">Solo con PDF</option>
               <option value="link">Solo con link</option>
+              <option value="audio">Solo con audio</option>
             </select>
           </div>
 
@@ -321,6 +328,7 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
                     >
                       {book.pdf_url && <span className="badge">PDF</span>}
                       {book.external_link && <span className="badge">Link</span>}
+                      {book.audio_url && <span className="badge">Audio</span>}
                     </div>
                   </article>
                 </Link>
