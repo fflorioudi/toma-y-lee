@@ -10,13 +10,14 @@ type PageProps = {
 
 type Book = {
   id: string;
-  user_id: string | null;
   title: string;
   author: string;
   description: string | null;
   external_link: string | null;
+  audio_url: string | null;
   pdf_url: string | null;
   cover_url: string | null;
+  category_id: string | null;
 };
 
 export default async function AdminEditarLibroPage({ params }: PageProps) {
@@ -43,7 +44,9 @@ export default async function AdminEditarLibroPage({ params }: PageProps) {
 
   const { data: book, error } = await supabase
     .from("books")
-    .select("id, user_id, title, author, description, external_link, pdf_url, cover_url")
+    .select(
+      "id, title, author, description, external_link, audio_url, pdf_url, cover_url, category_id"
+    )
     .eq("id", id)
     .single();
 
