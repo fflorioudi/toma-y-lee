@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -17,16 +17,55 @@ export default function LoginPageClient() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [message, setMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const [registerCooldown, setRegisterCooldown] = useState(0);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [showResendConfirmation, setShowResendConfirmation] = useState(false);
+
   const cleanEmail = email.trim().toLowerCase();
+
+  useEffect(() => {
+    if (registerCooldown <= 0) return;
+
+    const timer = setInterval(() => {
+      setRegisterCooldown((prev) => (prev <= 1 ? 0 : prev - 1));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [registerCooldown]);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => (prev <= 1 ? 0 : prev - 1));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
+
+  const validateEmail = (value: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(value);
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
+    setShowResendConfirmation(false);
+
+    if (registerCooldown > 0) {
+      setMessage(`Esperá ${registerCooldown}s antes de volver a registrarte.`);
+      setIsSuccess(false);
+      setLoading(false);
+      return;
+    }
 
     if (!name.trim() || !lastName.trim()) {
       setMessage("Completá nombre y apellido.");
@@ -35,8 +74,7 @@ export default function LoginPageClient() {
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(cleanEmail)) {
+    if (!validateEmail(cleanEmail)) {
       setMessage("Ingresá un correo válido.");
       setIsSuccess(false);
       setLoading(false);
@@ -82,9 +120,10 @@ export default function LoginPageClient() {
     setMessage("Te enviamos un correo para confirmar tu cuenta.");
     setIsSuccess(true);
     setLoading(false);
+    setRegisterCooldown(60);
+
     setName("");
     setLastName("");
-    setEmail("");
     setPassword("");
   };
 
@@ -92,9 +131,9 @@ export default function LoginPageClient() {
     e.preventDefault();
     setLoading(true);
     setMessage("");
+    setShowResendConfirmation(false);
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(cleanEmail)) {
+    if (!validateEmail(cleanEmail)) {
       setMessage("Ingresá un correo válido.");
       setIsSuccess(false);
       setLoading(false);
@@ -107,8 +146,22 @@ export default function LoginPageClient() {
     });
 
     if (error) {
-      setMessage(error.message);
+      const errorMessage = error.message.toLowerCase();
+
+      if (
+        errorMessage.includes("email not confirmed") ||
+        errorMessage.includes("not confirmed")
+      ) {
+        setMessage("Tu correo todavía no fue confirmado.");
+        setIsSuccess(false);
+        setShowResendConfirmation(true);
+        setLoading(false);
+        return;
+      }
+
+      setMessage("Usuario y/o contraseña incorrectos.");
       setIsSuccess(false);
+      setShowResendConfirmation(false);
       setLoading(false);
       return;
     }
@@ -117,9 +170,51 @@ export default function LoginPageClient() {
     router.refresh();
   };
 
+  const handleResendConfirmation = async () => {
+    setResendLoading(true);
+    setMessage("");
+
+    if (resendCooldown > 0) {
+      setMessage(`Esperá ${resendCooldown}s antes de reenviar el correo.`);
+      setIsSuccess(false);
+      setResendLoading(false);
+      return;
+    }
+
+    if (!validateEmail(cleanEmail)) {
+      setMessage("Ingresá un correo válido.");
+      setIsSuccess(false);
+      setResendLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: cleanEmail,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      setMessage(error.message);
+      setIsSuccess(false);
+      setResendLoading(false);
+      return;
+    }
+
+    setMessage("Te reenviamos el correo de confirmación.");
+    setIsSuccess(true);
+    setResendLoading(false);
+    setResendCooldown(60);
+  };
+
   return (
     <main className="page-container">
-      <section className="card" style={{ maxWidth: "520px", margin: "3rem auto 0" }}>
+      <section
+        className="card"
+        style={{ maxWidth: "520px", margin: "3rem auto 0" }}
+      >
         <h1
           className="section-title"
           style={{ marginBottom: "0.5rem", color: "var(--accent)" }}
@@ -137,6 +232,29 @@ export default function LoginPageClient() {
           <p className={isSuccess ? "message-success" : "message-error"}>
             {message}
           </p>
+        )}
+
+        {showResendConfirmation && (
+          <div style={{ marginTop: "0.75rem" }}>
+            <button
+              type="button"
+              onClick={handleResendConfirmation}
+              disabled={resendLoading || resendCooldown > 0}
+              style={{
+                background: "transparent",
+                color: "var(--text)",
+                border: "1px solid var(--border)",
+                padding: "0.55rem 0.8rem",
+                width: "100%",
+              }}
+            >
+              {resendLoading
+                ? "Reenviando..."
+                : resendCooldown > 0
+                ? `Reenviar en ${resendCooldown}s`
+                : "Reenviar correo de confirmación"}
+            </button>
+          </div>
         )}
 
         <form
@@ -208,12 +326,17 @@ export default function LoginPageClient() {
             </div>
           )}
 
-          <button type="submit" disabled={loading}>
+          <button
+            type="submit"
+            disabled={loading || (isRegister && registerCooldown > 0)}
+          >
             {loading
               ? "Procesando..."
               : isRegister
-              ? "Registrarme"
-              : "Ingresar"}
+                ? registerCooldown > 0
+                  ? `Esperá ${registerCooldown}s`
+                  : "Registrarme"
+                : "Ingresar"}
           </button>
         </form>
 
@@ -223,6 +346,7 @@ export default function LoginPageClient() {
             setIsRegister(!isRegister);
             setMessage("");
             setIsSuccess(false);
+            setShowResendConfirmation(false);
           }}
           style={{
             marginTop: "1rem",

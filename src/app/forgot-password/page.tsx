@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function ForgotPasswordPage() {
@@ -12,23 +12,26 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);
 
-  const startCooldown = () => {
-    setCooldown(60);
-    const interval = setInterval(() => {
-      setCooldown((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          return 0;
-        }
-        return prev - 1;
-      });
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => {
+      setCooldown((prev) => (prev <= 1 ? 0 : prev - 1));
     }, 1000);
-  };
+
+    return () => clearInterval(timer);
+  }, [cooldown]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
+
+    if (cooldown > 0) {
+      setMessage(`Esperá ${cooldown}s antes de pedir otro enlace.`);
+      setIsSuccess(false);
+      setLoading(false);
+      return;
+    }
 
     const cleanEmail = email.trim().toLowerCase();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -54,7 +57,7 @@ export default function ForgotPasswordPage() {
     setMessage("Te enviamos un correo para restablecer tu contraseña.");
     setIsSuccess(true);
     setLoading(false);
-    startCooldown();
+    setCooldown(60);
   };
 
   return (
