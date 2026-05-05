@@ -71,8 +71,9 @@ export default function ForgotPasswordPage() {
         </h1>
 
         <p className="subtle-text" style={{ marginTop: 0 }}>
-          Ingresá tu correo y te enviaremos un enlace para crear una nueva contraseña.
-        </p>
+            Ingresá tu correo y te enviaremos un enlace para crear una nueva contraseña.
+             Si no lo ves en unos minutos, revisá también la carpeta de spam o correo no deseado.
+          </p>
 
         {message && (
           <p className={isSuccess ? "message-success" : "message-error"}>
