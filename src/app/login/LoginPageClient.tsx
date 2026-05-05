@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 export default function LoginPageClient() {
   const supabase = createClient();
@@ -17,7 +18,10 @@ export default function LoginPageClient() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const cleanEmail = email.trim().toLowerCase();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,12 +30,21 @@ export default function LoginPageClient() {
 
     if (!name.trim() || !lastName.trim()) {
       setMessage("Completá nombre y apellido.");
+      setIsSuccess(false);
+      setLoading(false);
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      setMessage("Ingresá un correo válido.");
+      setIsSuccess(false);
       setLoading(false);
       return;
     }
 
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: cleanEmail,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
@@ -40,6 +53,7 @@ export default function LoginPageClient() {
 
     if (error) {
       setMessage(error.message);
+      setIsSuccess(false);
       setLoading(false);
       return;
     }
@@ -59,12 +73,14 @@ export default function LoginPageClient() {
         setMessage(
           "La cuenta se creó, pero hubo un problema al guardar nombre y apellido."
         );
+        setIsSuccess(false);
         setLoading(false);
         return;
       }
     }
 
     setMessage("Te enviamos un correo para confirmar tu cuenta.");
+    setIsSuccess(true);
     setLoading(false);
     setName("");
     setLastName("");
@@ -77,13 +93,22 @@ export default function LoginPageClient() {
     setLoading(true);
     setMessage("");
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      setMessage("Ingresá un correo válido.");
+      setIsSuccess(false);
+      setLoading(false);
+      return;
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: cleanEmail,
       password,
     });
 
     if (error) {
       setMessage(error.message);
+      setIsSuccess(false);
       setLoading(false);
       return;
     }
@@ -103,13 +128,13 @@ export default function LoginPageClient() {
         </h1>
 
         {confirmed === "true" && (
-          <p style={{ color: "var(--accent)" }}>
+          <p className="message-success">
             Tu correo fue confirmado. Ya podés iniciar sesión.
           </p>
         )}
 
         {message && (
-          <p style={{ color: message.includes("confirmar") ? "var(--accent)" : "var(--text)" }}>
+          <p className={isSuccess ? "message-success" : "message-error"}>
             {message}
           </p>
         )}
@@ -168,6 +193,21 @@ export default function LoginPageClient() {
             />
           </div>
 
+          {!isRegister && (
+            <div style={{ marginTop: "-0.25rem" }}>
+              <Link
+                href="/forgot-password"
+                style={{
+                  color: "var(--accent)",
+                  textDecoration: "none",
+                  fontSize: "0.95rem",
+                }}
+              >
+                Olvidé mi contraseña
+              </Link>
+            </div>
+          )}
+
           <button type="submit" disabled={loading}>
             {loading
               ? "Procesando..."
@@ -182,6 +222,7 @@ export default function LoginPageClient() {
           onClick={() => {
             setIsRegister(!isRegister);
             setMessage("");
+            setIsSuccess(false);
           }}
           style={{
             marginTop: "1rem",
