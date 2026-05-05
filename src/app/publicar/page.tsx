@@ -9,6 +9,15 @@ type Category = {
   name: string;
 };
 
+function isValidHttpUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export default function PublicarPage() {
   const supabase = createClient();
   const router = useRouter();
@@ -44,19 +53,60 @@ export default function PublicarPage() {
     setLoading(true);
     setMessage("");
 
+    const cleanTitle = title.trim();
+    const cleanAuthor = author.trim();
+    const cleanDescription = description.trim();
+    const cleanLink = link.trim();
+    const cleanAudioLink = audioLink.trim();
+
+    if (cleanTitle.length < 2) {
+      setMessage("El título es demasiado corto.");
+      setIsSuccess(false);
+      setLoading(false);
+      return;
+    }
+
+    if (cleanAuthor.length < 2) {
+      setMessage("El nombre del autor es demasiado corto.");
+      setIsSuccess(false);
+      setLoading(false);
+      return;
+    }
+
+    if (cleanDescription && cleanDescription.length < 10) {
+      setMessage("La descripción es demasiado corta.");
+      setIsSuccess(false);
+      setLoading(false);
+      return;
+    }
+
+    if (cleanLink && !isValidHttpUrl(cleanLink)) {
+      setMessage("Ingresá un link externo válido.");
+      setIsSuccess(false);
+      setLoading(false);
+      return;
+    }
+
+    if (cleanAudioLink && !isValidHttpUrl(cleanAudioLink)) {
+      setMessage("Ingresá un link de audiolibro válido.");
+      setIsSuccess(false);
+      setLoading(false);
+      return;
+    }
+
+    if (!cleanLink && !pdfFile && !cleanAudioLink) {
+      setMessage("Tenés que agregar un link, subir un PDF o agregar un audiolibro.");
+      setIsSuccess(false);
+      setLoading(false);
+      return;
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
     if (!user) {
       setMessage("Tenés que estar logueado.");
-      setIsSuccess(false);
-      setLoading(false);
-      return;
-    }
-
-    if (!link && !pdfFile && !audioLink) {
-      setMessage("Tenés que agregar un link, subir un PDF o agregar un audiolibro.");
       setIsSuccess(false);
       setLoading(false);
       return;
@@ -136,11 +186,11 @@ export default function PublicarPage() {
 
     const { error } = await supabase.from("books").insert({
       user_id: user.id,
-      title,
-      author,
-      description,
-      external_link: link || null,
-      audio_url: audioLink || null,
+      title: cleanTitle,
+      author: cleanAuthor,
+      description: cleanDescription || null,
+      external_link: cleanLink || null,
+      audio_url: cleanAudioLink || null,
       pdf_url: pdfUrl,
       cover_url: coverUrl,
       category_id: categoryId || null,
@@ -178,7 +228,7 @@ export default function PublicarPage() {
           Compartir un libro
         </h1>
         <p className="subtle-text" style={{ marginTop: 0, maxWidth: "760px" }}>
-          Sumá una lectura a la biblioteca colaborativa de la JAR para que otros
+          Sumá una lectura a la biblioteca colaborativa para que otros
           también puedan encontrarla y aprovecharla.
         </p>
       </section>
