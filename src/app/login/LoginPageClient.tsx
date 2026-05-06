@@ -251,8 +251,8 @@ export default function LoginPageClient() {
               {resendLoading
                 ? "Reenviando..."
                 : resendCooldown > 0
-                ? `Reenviar en ${resendCooldown}s`
-                : "Reenviar correo de confirmación"}
+                  ? `Reenviar en ${resendCooldown}s`
+                  : "Reenviar correo de confirmación"}
             </button>
           </div>
         )}

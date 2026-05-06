@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import TurnstileWidget from "@/components/TurnstileWidget";
 
 type Category = {
   id: string;
@@ -31,6 +32,8 @@ export default function PublicarPage() {
   const [categoryId, setCategoryId] = useState("");
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [captchaToken, setCaptchaToken] = useState("");
+
   const [message, setMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -96,6 +99,30 @@ export default function PublicarPage() {
 
     if (!cleanLink && !pdfFile && !cleanAudioLink) {
       setMessage("Tenés que agregar un link, subir un PDF o agregar un audiolibro.");
+      setIsSuccess(false);
+      setLoading(false);
+      return;
+    }
+
+    if (!captchaToken) {
+      setMessage("Completá la verificación anti-bot.");
+      setIsSuccess(false);
+      setLoading(false);
+      return;
+    }
+
+    const captchaResponse = await fetch("/api/turnstile/verify", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ token: captchaToken }),
+    });
+
+    const captchaResult = await captchaResponse.json();
+
+    if (!captchaResponse.ok || !captchaResult.success) {
+      setMessage(captchaResult.message || "No se pudo validar la verificación anti-bot.");
       setIsSuccess(false);
       setLoading(false);
       return;
@@ -213,6 +240,7 @@ export default function PublicarPage() {
     setCategoryId("");
     setPdfFile(null);
     setCoverFile(null);
+    setCaptchaToken("");
     setLoading(false);
 
     setTimeout(() => {
@@ -325,6 +353,15 @@ export default function PublicarPage() {
               type="file"
               accept="image/png,image/jpeg"
               onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
+            />
+          </div>
+
+          <div className="form-field">
+            <label>Verificación</label>
+            <TurnstileWidget
+              onVerify={(token) => setCaptchaToken(token)}
+              onExpire={() => setCaptchaToken("")}
+              onError={() => setCaptchaToken("")}
             />
           </div>
 

@@ -54,7 +54,9 @@ export default function ForgotPasswordPage() {
       return;
     }
 
-    setMessage("Te enviamos un correo para restablecer tu contraseña.");
+    setMessage(
+      "Te enviamos un correo para restablecer tu contraseña. Si no lo ves en unos minutos, revisá también la carpeta de spam o correo no deseado."
+    );
     setIsSuccess(true);
     setLoading(false);
     setCooldown(60);
@@ -62,7 +64,10 @@ export default function ForgotPasswordPage() {
 
   return (
     <main className="page-container">
-      <section className="card" style={{ maxWidth: "520px", margin: "3rem auto 0" }}>
+      <section
+        className="card"
+        style={{ maxWidth: "520px", margin: "3rem auto 0" }}
+      >
         <h1
           className="section-title"
           style={{ marginBottom: "0.5rem", color: "var(--accent)" }}
@@ -70,18 +75,17 @@ export default function ForgotPasswordPage() {
           Recuperar contraseña
         </h1>
 
-        <p className="subtle-text" style={{ marginTop: 0 }}>
-            Ingresá tu correo y te enviaremos un enlace para crear una nueva contraseña.
-             Si no lo ves en unos minutos, revisá también la carpeta de spam o correo no deseado.
-          </p>
-
         {message && (
           <p className={isSuccess ? "message-success" : "message-error"}>
             {message}
           </p>
         )}
 
-        <form onSubmit={handleSubmit} className="form-grid" style={{ marginTop: "1rem" }}>
+        <form
+          onSubmit={handleSubmit}
+          className="form-grid"
+          style={{ marginTop: "1rem" }}
+        >
           <div className="form-field">
             <label htmlFor="email">Email</label>
             <input
@@ -97,8 +101,8 @@ export default function ForgotPasswordPage() {
             {loading
               ? "Enviando..."
               : cooldown > 0
-              ? `Esperá ${cooldown}s`
-              : "Enviar enlace"}
+                ? `Esperá ${cooldown}s`
+                : "Enviar enlace"}
           </button>
         </form>
       </section>
