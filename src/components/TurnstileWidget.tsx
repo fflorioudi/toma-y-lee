@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
 
 declare global {
@@ -34,16 +34,43 @@ export default function TurnstileWidget({
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const widgetIdRef = useRef<string | null>(null);
+  const [debugMessage, setDebugMessage] = useState("");
 
   useEffect(() => {
+    const sitekey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
+
+    if (!sitekey) {
+      setDebugMessage("Falta NEXT_PUBLIC_TURNSTILE_SITE_KEY");
+      return;
+    }
+
     const renderWidget = () => {
-      if (!window.turnstile || !containerRef.current || widgetIdRef.current) return;
+      if (!window.turnstile) {
+        setDebugMessage("Turnstile script no cargó todavía");
+        return;
+      }
+
+      if (!containerRef.current) {
+        setDebugMessage("No existe el contenedor del captcha");
+        return;
+      }
+
+      if (widgetIdRef.current) return;
 
       widgetIdRef.current = window.turnstile.render(containerRef.current, {
-        sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "",
-        callback: (token: string) => onVerify(token),
-        "expired-callback": () => onExpire?.(),
-        "error-callback": () => onError?.(),
+        sitekey,
+        callback: (token: string) => {
+          setDebugMessage("");
+          onVerify(token);
+        },
+        "expired-callback": () => {
+          setDebugMessage("El captcha expiró");
+          onExpire?.();
+        },
+        "error-callback": () => {
+          setDebugMessage("Error al cargar Turnstile");
+          onError?.();
+        },
         theme: "auto",
       });
     };
@@ -65,6 +92,11 @@ export default function TurnstileWidget({
         strategy="afterInteractive"
       />
       <div ref={containerRef} />
+      {debugMessage && (
+        <p style={{ color: "red", fontSize: "0.9rem", marginTop: "0.5rem" }}>
+          {debugMessage}
+        </p>
+      )}
     </>
   );
 }
