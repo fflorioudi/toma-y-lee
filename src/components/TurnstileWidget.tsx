@@ -57,22 +57,27 @@ export default function TurnstileWidget({
 
       if (widgetIdRef.current) return;
 
-      widgetIdRef.current = window.turnstile.render(containerRef.current, {
-        sitekey,
-        callback: (token: string) => {
-          setDebugMessage("");
-          onVerify(token);
-        },
-        "expired-callback": () => {
-          setDebugMessage("El captcha expiró");
-          onExpire?.();
-        },
-        "error-callback": () => {
-          setDebugMessage("Error al cargar Turnstile");
-          onError?.();
-        },
-        theme: "auto",
-      });
+      try {
+        widgetIdRef.current = window.turnstile.render(containerRef.current, {
+          sitekey,
+          callback: (token: string) => {
+            setDebugMessage("");
+            onVerify(token);
+          },
+          "expired-callback": () => {
+            setDebugMessage("El captcha expiró");
+            onExpire?.();
+          },
+          "error-callback": () => {
+            setDebugMessage("Error al cargar Turnstile");
+            onError?.();
+          },
+          theme: "auto",
+        });
+      } catch (error) {
+        setDebugMessage("Error al renderizar Turnstile");
+        console.error(error);
+      }
     };
 
     const interval = setInterval(() => {
