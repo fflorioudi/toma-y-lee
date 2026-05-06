@@ -81,13 +81,17 @@ export default function LoginPageClient() {
       return;
     }
 
-    const { data, error } = await supabase.auth.signUp({
-      email: cleanEmail,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+  const { data, error } = await supabase.auth.signUp({
+  email: cleanEmail,
+  password,
+  options: {
+    emailRedirectTo: `${window.location.origin}/auth/callback`,
+    data: {
+      name: name.trim(),
+      last_name: lastName.trim(),
+    },
+  },
+});
 
     if (error) {
       setMessage(error.message);
