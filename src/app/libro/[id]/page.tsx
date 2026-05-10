@@ -70,6 +70,41 @@ function formatDate(date: string) {
   });
 }
 
+function getYouTubeEmbedUrl(url: string | null): string | null {
+  if (!url) return null;
+
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace("www.", "");
+
+    let videoId: string | null = null;
+
+    if (
+      host === "youtube.com" ||
+      host === "m.youtube.com" ||
+      host === "youtube-nocookie.com"
+    ) {
+      if (parsed.pathname === "/watch") {
+        videoId = parsed.searchParams.get("v");
+      } else if (parsed.pathname.startsWith("/embed/")) {
+        videoId = parsed.pathname.split("/embed/")[1]?.split("/")[0] || null;
+      } else if (parsed.pathname.startsWith("/shorts/")) {
+        videoId = parsed.pathname.split("/shorts/")[1]?.split("/")[0] || null;
+      }
+    }
+
+    if (host === "youtu.be") {
+      videoId = parsed.pathname.replace("/", "").split("/")[0] || null;
+    }
+
+    if (!videoId) return null;
+
+    return `https://www.youtube.com/embed/${videoId}`;
+  } catch {
+    return null;
+  }
+}
+
 export default async function LibroDetallePage({ params }: PageProps) {
   const { id } = await params;
   const supabase = await createClient();
@@ -92,6 +127,7 @@ export default async function LibroDetallePage({ params }: PageProps) {
   }
 
   const typedBook = book as Book;
+  const youtubeEmbedUrl = getYouTubeEmbedUrl(typedBook.audio_url);
 
   let uploaderProfile: ProfileRow | null = null;
 
@@ -304,7 +340,7 @@ export default async function LibroDetallePage({ params }: PageProps) {
                 </a>
               )}
 
-              {typedBook.audio_url && (
+              {typedBook.audio_url && !youtubeEmbedUrl && (
                 <a
                   href={typedBook.audio_url}
                   target="_blank"
@@ -322,6 +358,52 @@ export default async function LibroDetallePage({ params }: PageProps) {
 
               <ReportBookButton bookId={typedBook.id} />
             </div>
+
+            {youtubeEmbedUrl && (
+              <div className="top-space">
+                <h2 style={{ marginBottom: "0.75rem" }}>Escuchalo acá</h2>
+
+                <div
+                  style={{
+                    position: "relative",
+                    width: "100%",
+                    paddingBottom: "56.25%",
+                    height: 0,
+                    overflow: "hidden",
+                    borderRadius: "16px",
+                    border: "1px solid var(--border)",
+                    background: "var(--surface-soft)",
+                  }}
+                >
+                  <iframe
+                    src={youtubeEmbedUrl}
+                    title={`Audiolibro de ${typedBook.title}`}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      border: 0,
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginTop: "0.9rem" }}>
+                  <a
+                    href={typedBook.audio_url!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="secondary-link"
+                  >
+                    Abrir en YouTube
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
