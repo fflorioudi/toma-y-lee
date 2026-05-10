@@ -105,6 +105,38 @@ function getYouTubeEmbedUrl(url: string | null): string | null {
   }
 }
 
+function getSpotifyEmbedUrl(url: string | null): string | null {
+  if (!url) return null;
+
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace("www.", "");
+
+    if (host !== "open.spotify.com") return null;
+
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    if (parts.length < 2) return null;
+
+    const validTypes = [
+      "track",
+      "episode",
+      "show",
+      "playlist",
+      "album",
+      "artist",
+    ];
+
+    const contentType = parts[0];
+    const contentId = parts[1];
+
+    if (!validTypes.includes(contentType) || !contentId) return null;
+
+    return `https://open.spotify.com/embed/${contentType}/${contentId}`;
+  } catch {
+    return null;
+  }
+}
+
 export default async function LibroDetallePage({ params }: PageProps) {
   const { id } = await params;
   const supabase = await createClient();
@@ -128,6 +160,7 @@ export default async function LibroDetallePage({ params }: PageProps) {
 
   const typedBook = book as Book;
   const youtubeEmbedUrl = getYouTubeEmbedUrl(typedBook.audio_url);
+  const spotifyEmbedUrl = getSpotifyEmbedUrl(typedBook.audio_url);
 
   let uploaderProfile: ProfileRow | null = null;
 
@@ -215,6 +248,8 @@ export default async function LibroDetallePage({ params }: PageProps) {
 
     initialIsFavorite = !!favoriteData;
   }
+
+  const hasEmbeddedAudio = !!youtubeEmbedUrl || !!spotifyEmbedUrl;
 
   return (
     <main className="page-container">
@@ -340,7 +375,7 @@ export default async function LibroDetallePage({ params }: PageProps) {
                 </a>
               )}
 
-              {typedBook.audio_url && !youtubeEmbedUrl && (
+              {typedBook.audio_url && !hasEmbeddedAudio && (
                 <a
                   href={typedBook.audio_url}
                   target="_blank"
@@ -404,19 +439,62 @@ export default async function LibroDetallePage({ params }: PageProps) {
                 </div>
               </div>
             )}
+
+            {spotifyEmbedUrl && (
+              <div className="top-space">
+                <h2 style={{ marginBottom: "0.75rem" }}>Escuchalo acá</h2>
+
+                <div
+                  style={{
+                    borderRadius: "16px",
+                    border: "1px solid var(--border)",
+                    background: "var(--surface-soft)",
+                    overflow: "hidden",
+                  }}
+                >
+                  <iframe
+                    src={spotifyEmbedUrl}
+                    title={`Audio de Spotify de ${typedBook.title}`}
+                    width="100%"
+                    height="352"
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    loading="lazy"
+                    style={{
+                      border: 0,
+                      display: "block",
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginTop: "0.9rem" }}>
+                  <a
+                    href={typedBook.audio_url!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="secondary-link"
+                  >
+                    Abrir en Spotify
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
 
       <section className="top-space-lg">
-        <h2 className="section-title" style={{ fontSize: "2rem", color: "var(--accent)" }}>
+        <h2
+          className="section-title"
+          style={{ fontSize: "2rem", color: "var(--accent)" }}
+        >
           Reseñas
         </h2>
 
         {reviewsWithUser.length === 0 ? (
           <div className="card">
             <p className="empty-state" style={{ margin: 0 }}>
-              Todavía no hay reseñas para este libro. Podés ser la primera persona en compartir una.
+              Todavía no hay reseñas para este libro. Podés ser la primera
+              persona en compartir una.
             </p>
           </div>
         ) : (
@@ -462,7 +540,10 @@ export default async function LibroDetallePage({ params }: PageProps) {
       </section>
 
       <section className="top-space-lg">
-        <h2 className="section-title" style={{ fontSize: "2rem", color: "var(--accent)" }}>
+        <h2
+          className="section-title"
+          style={{ fontSize: "2rem", color: "var(--accent)" }}
+        >
           También te puede interesar
         </h2>
 
@@ -507,7 +588,9 @@ export default async function LibroDetallePage({ params }: PageProps) {
                     />
                   )}
 
-                  <h3 style={{ marginTop: 0, marginBottom: "0.35rem" }}>{book.title}</h3>
+                  <h3 style={{ marginTop: 0, marginBottom: "0.35rem" }}>
+                    {book.title}
+                  </h3>
                   <p className="subtle-text" style={{ marginTop: 0 }}>
                     {book.author}
                   </p>
