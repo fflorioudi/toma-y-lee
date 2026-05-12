@@ -78,6 +78,7 @@ function getYouTubeEmbedUrl(url: string | null): string | null {
     const host = parsed.hostname.replace("www.", "");
 
     let videoId: string | null = null;
+    let playlistId: string | null = null;
 
     if (
       host === "youtube.com" ||
@@ -86,6 +87,9 @@ function getYouTubeEmbedUrl(url: string | null): string | null {
     ) {
       if (parsed.pathname === "/watch") {
         videoId = parsed.searchParams.get("v");
+        playlistId = parsed.searchParams.get("list");
+      } else if (parsed.pathname === "/playlist") {
+        playlistId = parsed.searchParams.get("list");
       } else if (parsed.pathname.startsWith("/embed/")) {
         videoId = parsed.pathname.split("/embed/")[1]?.split("/")[0] || null;
       } else if (parsed.pathname.startsWith("/shorts/")) {
@@ -95,11 +99,18 @@ function getYouTubeEmbedUrl(url: string | null): string | null {
 
     if (host === "youtu.be") {
       videoId = parsed.pathname.replace("/", "").split("/")[0] || null;
+      playlistId = parsed.searchParams.get("list");
     }
 
-    if (!videoId) return null;
+    if (videoId) {
+      return `https://www.youtube.com/embed/${videoId}`;
+    }
 
-    return `https://www.youtube.com/embed/${videoId}`;
+    if (playlistId) {
+      return `https://www.youtube.com/embed/videoseries?list=${playlistId}`;
+    }
+
+    return null;
   } catch {
     return null;
   }
