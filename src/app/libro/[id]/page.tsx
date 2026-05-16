@@ -5,6 +5,7 @@ import ReviewForm from "@/components/ReviewForm";
 import ReportBookButton from "@/components/ReportBookButton";
 import ReportReviewButton from "@/components/ReportReviewButton";
 import FavoriteButton from "@/components/FavoriteButton";
+import BookViewTracker from "@/components/BookViewTracker";
 
 type PageProps = {
   params: Promise<{
@@ -24,6 +25,7 @@ type Book = {
   pdf_url: string | null;
   cover_url: string | null;
   category_id: string | null;
+  view_count: number;
 };
 
 type ReviewRow = {
@@ -159,7 +161,7 @@ export default async function LibroDetallePage({ params }: PageProps) {
   const { data: book, error: bookError } = await supabase
     .from("books")
     .select(
-      "id, user_id, title, author, description, featured_quote, external_link, audio_url, pdf_url, cover_url, category_id"
+      "id, user_id, title, author, description, featured_quote, external_link, audio_url, pdf_url, cover_url, category_id, view_count"
     )
     .eq("id", id)
     .eq("is_hidden", false)
@@ -172,6 +174,7 @@ export default async function LibroDetallePage({ params }: PageProps) {
   const typedBook = book as Book;
   const youtubeEmbedUrl = getYouTubeEmbedUrl(typedBook.audio_url);
   const spotifyEmbedUrl = getSpotifyEmbedUrl(typedBook.audio_url);
+  const hasEmbeddedAudio = !!youtubeEmbedUrl || !!spotifyEmbedUrl;
 
   let uploaderProfile: ProfileRow | null = null;
 
@@ -260,10 +263,10 @@ export default async function LibroDetallePage({ params }: PageProps) {
     initialIsFavorite = !!favoriteData;
   }
 
-  const hasEmbeddedAudio = !!youtubeEmbedUrl || !!spotifyEmbedUrl;
-
   return (
     <main className="page-container">
+      <BookViewTracker bookId={typedBook.id} />
+
       <Link
         href="/catalogo"
         className="secondary-link"
@@ -328,8 +331,15 @@ export default async function LibroDetallePage({ params }: PageProps) {
               }}
             >
               {promedio
-                ? `⭐ ${promedio}/5 · ${reviewsCount} reseña${reviewsCount === 1 ? "" : "s"}`
+                ? `⭐ ${promedio}/5 · ${reviewsCount} reseña${
+                    reviewsCount === 1 ? "" : "s"
+                  }`
                 : "Sin reseñas todavía"}
+            </p>
+
+            <p className="subtle-text" style={{ marginTop: "0.35rem" }}>
+              👁 {typedBook.view_count ?? 0} vista
+              {typedBook.view_count === 1 ? "" : "s"}
             </p>
 
             <div className="top-space">
