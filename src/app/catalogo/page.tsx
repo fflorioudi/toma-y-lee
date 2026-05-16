@@ -21,6 +21,7 @@ type Book = {
   external_link: string | null;
   audio_url: string | null;
   category_id: string | null;
+  view_count: number | null;
   categories:
     | {
         name: string | null;
@@ -102,6 +103,7 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
       external_link,
       audio_url,
       category_id,
+      view_count,
       categories (
         name
       )
@@ -130,6 +132,8 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
 
   if (order === "title_asc") {
     query = query.order("title", { ascending: true });
+  } else if (order === "most_viewed") {
+    query = query.order("view_count", { ascending: false });
   } else {
     query = query.order("created_at", { ascending: false });
   }
@@ -215,7 +219,11 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
 
           <div className="form-field">
             <label htmlFor="minRating">Valoración mínima</label>
-            <select id="minRating" name="minRating" defaultValue={String(minRating)}>
+            <select
+              id="minRating"
+              name="minRating"
+              defaultValue={String(minRating)}
+            >
               <option value="0">Todas</option>
               <option value="1">1★ o más</option>
               <option value="2">2★ o más</option>
@@ -229,6 +237,7 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
             <label htmlFor="order">Orden</label>
             <select id="order" name="order" defaultValue={order}>
               <option value="recent">Más recientes</option>
+              <option value="most_viewed">Más vistos</option>
               <option value="title_asc">Título A-Z</option>
             </select>
           </div>
@@ -253,6 +262,7 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
           <div className="grid-auto">
             {filteredBooks.map((book) => {
               const stats = ratingsStatsMap.get(book.id);
+              const views = book.view_count ?? 0;
 
               return (
                 <Link
@@ -314,8 +324,17 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
                       }}
                     >
                       {stats
-                        ? `⭐ ${stats.average.toFixed(1)} · ${stats.count} reseña${stats.count === 1 ? "" : "s"}`
+                        ? `⭐ ${stats.average.toFixed(1)} · ${
+                            stats.count
+                          } reseña${stats.count === 1 ? "" : "s"}`
                         : "Sin reseñas"}
+                    </p>
+
+                    <p
+                      className="subtle-text"
+                      style={{ marginTop: "0.35rem", marginBottom: 0 }}
+                    >
+                      👁 {views} vista{views === 1 ? "" : "s"}
                     </p>
 
                     <p className="subtle-text" style={{ marginTop: "0.75rem" }}>
