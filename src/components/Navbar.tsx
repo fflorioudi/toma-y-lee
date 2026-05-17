@@ -77,10 +77,15 @@ export default async function Navbar() {
               justifyContent: "center",
               gap: "1rem",
               flexWrap: "wrap",
+              rowGap: "0.5rem",
             }}
           >
             <Link href="/catalogo" style={{ textDecoration: "none" }}>
               Catálogo
+            </Link>
+
+            <Link href="/sobre" style={{ textDecoration: "none" }}>
+              Sobre
             </Link>
 
             {user ? (
