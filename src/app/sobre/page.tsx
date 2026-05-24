@@ -155,7 +155,7 @@ export default function SobrePage() {
           </p>
 
           <a
-            href="https://www.instagram.com/toma.y_lee/"
+            href="https://www.instagram.com/tomaylee.ok/"
             target="_blank"
             rel="noopener noreferrer"
             className="primary-link"
