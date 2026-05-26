@@ -29,10 +29,10 @@ function BookCardItem({ book }: { book: BookCard }) {
             alt={book.title}
             style={{
               width: "100%",
-              height: "220px",
+              height: "190px",
               objectFit: "cover",
               borderRadius: "14px",
-              marginBottom: "0.9rem",
+              marginBottom: "0.85rem",
               border: "1px solid var(--border)",
             }}
           />
@@ -40,34 +40,64 @@ function BookCardItem({ book }: { book: BookCard }) {
           <div
             style={{
               width: "100%",
-              height: "220px",
+              height: "190px",
               background: "var(--surface-soft)",
               borderRadius: "14px",
-              marginBottom: "0.9rem",
+              marginBottom: "0.85rem",
               border: "1px solid var(--border)",
             }}
           />
         )}
 
-        <h3 style={{ marginTop: 0, marginBottom: "0.35rem" }}>
+        <h3
+          style={{
+            marginTop: 0,
+            marginBottom: "0.35rem",
+            fontSize: "1.05rem",
+            lineHeight: 1.2,
+            wordBreak: "break-word",
+            overflowWrap: "anywhere",
+          }}
+        >
           {book.title}
         </h3>
 
-        <p className="subtle-text" style={{ marginTop: 0 }}>
+        <p
+          className="subtle-text"
+          style={{
+            marginTop: 0,
+            wordBreak: "break-word",
+            overflowWrap: "anywhere",
+          }}
+        >
           {book.author}
         </p>
 
-        <p className="subtle-text" style={{ marginTop: "0.5rem" }}>
-          {book.description?.slice(0, 110) || "Sin descripción."}
+        <p
+          className="subtle-text"
+          style={{
+            marginTop: "0.5rem",
+            wordBreak: "break-word",
+            overflowWrap: "anywhere",
+            display: "-webkit-box",
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+          }}
+        >
+          {book.description || "Sin descripción."}
         </p>
 
-        <p className="subtle-text" style={{ marginTop: "0.6rem", marginBottom: 0 }}>
+        <p
+          className="subtle-text"
+          style={{ marginTop: "0.6rem", marginBottom: 0 }}
+        >
           👁 {views} vista{views === 1 ? "" : "s"}
         </p>
 
         <div
           className="actions-row"
-          style={{ marginTop: "0.9rem", gap: "0.5rem" }}
+          style={{ marginTop: "0.8rem", gap: "0.5rem" }}
         >
           {book.pdf_url && <span className="badge">PDF</span>}
           {book.external_link && <span className="badge">Link</span>}
@@ -75,6 +105,52 @@ function BookCardItem({ book }: { book: BookCard }) {
         </div>
       </article>
     </Link>
+  );
+}
+
+function SectionHeader({
+  title,
+  description,
+  href,
+  linkText,
+}: {
+  title: string;
+  description: string;
+  href: string;
+  linkText: string;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        gap: "1rem",
+        alignItems: "end",
+        flexWrap: "wrap",
+        marginBottom: "1rem",
+      }}
+    >
+      <div>
+        <h2
+          className="section-title"
+          style={{
+            fontSize: "1.85rem",
+            color: "var(--accent)",
+            marginBottom: "0.35rem",
+          }}
+        >
+          {title}
+        </h2>
+
+        <p className="subtle-text" style={{ marginTop: 0 }}>
+          {description}
+        </p>
+      </div>
+
+      <Link href={href} className="secondary-link">
+        {linkText}
+      </Link>
+    </div>
   );
 }
 
@@ -97,76 +173,114 @@ export default async function HomePage() {
     )
     .eq("is_hidden", false)
     .order("view_count", { ascending: false })
-    .limit(3);
+    .limit(4);
 
   const latestBooks = (latestBooksData || []) as BookCard[];
   const mostViewedBooks = (mostViewedBooksData || []) as BookCard[];
 
   return (
     <main className="page-container">
-      <section className="hero-section">
-        <h1 className="display-title">Toma y lee</h1>
-
-        <p className="section-subtitle" style={{ margin: "1.2rem auto 0" }}>
-          Biblioteca online colaborativa. Un lugar para compartir libros,
-          reseñas y lecturas que acompañen la fe, la formación y la interioridad.
-        </p>
-
-        <div className="actions-row hero-actions top-space">
-          <Link href="/catalogo" className="primary-link">
-            Explorar catálogo
-          </Link>
-
-          <Link href="/publicar" className="secondary-link">
-            Compartir un libro
-          </Link>
-        </div>
-
+      <section
+        className="card"
+        style={{
+          padding: "2rem",
+          overflow: "hidden",
+        }}
+      >
         <div
-          className="hero-band"
           style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.35rem",
+            display: "grid",
+            gridTemplateColumns: "minmax(0, 1.2fr) minmax(260px, 0.8fr)",
+            gap: "1.5rem",
             alignItems: "center",
           }}
         >
-          <span>«Una sola alma y un solo corazón dirigidos hacia Dios».</span>
-          <strong style={{ letterSpacing: "0.12em" }}>TOMA.LEE.CRECE</strong>
+          <div>
+            <p
+              style={{
+                marginTop: 0,
+                marginBottom: "0.65rem",
+                color: "var(--accent)",
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                fontSize: "0.85rem",
+              }}
+            >
+              TOMA.LEE.CRECE
+            </p>
+
+            <h1
+              className="display-title"
+              style={{
+                margin: 0,
+                textAlign: "left",
+                fontSize: "clamp(2.35rem, 6vw, 4.2rem)",
+              }}
+            >
+              Toma y lee
+            </h1>
+
+            <p
+              className="section-subtitle"
+              style={{
+                margin: "1rem 0 0",
+                maxWidth: "680px",
+                textAlign: "left",
+              }}
+            >
+              Biblioteca online colaborativa. Un lugar para compartir libros,
+              reseñas y lecturas que acompañen la fe, la formación y la
+              interioridad.
+            </p>
+
+            <div className="actions-row top-space">
+              <Link href="/catalogo" className="primary-link">
+                Explorar catálogo
+              </Link>
+
+              <Link href="/sobre" className="secondary-link">
+                Conocer el proyecto
+              </Link>
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: "1rem",
+              borderRadius: "24px",
+              background: "var(--surface-soft)",
+              border: "1px solid var(--border)",
+            }}
+          >
+            <p
+  style={{
+    margin: 0,
+    color: "var(--accent)",
+    fontWeight: 700,
+  }}
+>
+  Una biblioteca para caminar
+</p>
+
+<p className="subtle-text" style={{ marginBottom: 0 }}>
+  Encontrá libros, guardá favoritos, marcá tus lecturas y compartí lo que te ayudó.
+</p>
+          </div>
         </div>
       </section>
 
-      <section className="top-space-lg">
+      <section className="top-space">
         <RandomBook />
       </section>
 
       <section className="top-space-lg">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            gap: "1rem",
-            alignItems: "end",
-            flexWrap: "wrap",
-            marginBottom: "1rem",
-          }}
-        >
-          <div>
-            <h2
-              className="section-title"
-              style={{ fontSize: "2rem", color: "var(--accent)" }}
-            >
-              Últimos libros compartidos
-            </h2>
-            <p className="subtle-text" style={{ marginTop: 0 }}>
-              Lo más reciente que la comunidad sumó a la biblioteca.
-            </p>
-          </div>
-
-          <Link href="/catalogo" className="secondary-link">
-            Ver catálogo
-          </Link>
-        </div>
+        <SectionHeader
+          title="Últimos libros compartidos"
+          description="Lo más reciente que la comunidad sumó a la biblioteca."
+          href="/catalogo"
+          linkText="Ver catálogo"
+        />
 
         {latestBooks.length === 0 ? (
           <div className="card">
@@ -184,32 +298,12 @@ export default async function HomePage() {
       </section>
 
       <section className="top-space-lg">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            gap: "1rem",
-            alignItems: "end",
-            flexWrap: "wrap",
-            marginBottom: "1rem",
-          }}
-        >
-          <div>
-            <h2
-              className="section-title"
-              style={{ fontSize: "2rem", color: "var(--accent)" }}
-            >
-              Más vistos por la comunidad
-            </h2>
-            <p className="subtle-text" style={{ marginTop: 0 }}>
-              Lecturas que otros estuvieron explorando últimamente.
-            </p>
-          </div>
-
-          <Link href="/catalogo?order=most_viewed" className="secondary-link">
-            Ver más vistos
-          </Link>
-        </div>
+        <SectionHeader
+          title="Más vistos por la comunidad"
+          description="Lecturas que otros estuvieron explorando últimamente."
+          href="/catalogo?order=most_viewed"
+          linkText="Ver más vistos"
+        />
 
         {mostViewedBooks.length === 0 ? (
           <div className="card">
@@ -230,24 +324,24 @@ export default async function HomePage() {
         <div
           className="card"
           style={{
-            textAlign: "center",
-            padding: "2rem",
+            padding: "1.6rem",
+            display: "flex",
+            justifyContent: "space-between",
+            gap: "1rem",
+            alignItems: "center",
+            flexWrap: "wrap",
           }}
         >
-          <h2 style={{ marginTop: 0, color: "var(--accent)" }}>
-            ¿Qué es Toma y lee?
-          </h2>
+          <div style={{ maxWidth: "760px" }}>
+            <h2 style={{ marginTop: 0, color: "var(--accent)" }}>
+              ¿Qué es Toma y lee?
+            </h2>
 
-          <p
-            className="subtle-text"
-            style={{
-              maxWidth: "720px",
-              margin: "0.75rem auto 1.25rem",
-            }}
-          >
-            Un espacio para reunir libros, PDFs, audiolibros y recursos que
-            ayuden a leer, escuchar, compartir y crecer en comunidad.
-          </p>
+            <p className="subtle-text" style={{ marginBottom: 0 }}>
+              Un espacio para reunir libros, PDFs, audiolibros y recursos que
+              ayuden a leer, escuchar, compartir y crecer en comunidad.
+            </p>
+          </div>
 
           <Link href="/sobre" className="secondary-link">
             Conocer más

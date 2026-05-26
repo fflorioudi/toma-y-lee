@@ -20,8 +20,34 @@ export default async function RandomBook() {
   if (error || !books || books.length === 0) {
     return (
       <section className="card">
-        <h2 style={{ marginTop: 0 }}>No sé qué leer</h2>
-        <p className="empty-state">Todavía no hay libros cargados.</p>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: "1rem",
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
+        >
+          <div>
+            <p
+              style={{
+                margin: 0,
+                color: "var(--accent)",
+                fontWeight: 700,
+                letterSpacing: "0.02em",
+              }}
+            >
+              Sugerencia rápida
+            </p>
+
+            <h2 style={{ margin: "0.25rem 0 0" }}>No sé qué leer</h2>
+          </div>
+        </div>
+
+        <p className="empty-state" style={{ marginBottom: 0 }}>
+          Todavía no hay libros cargados.
+        </p>
       </section>
     );
   }
@@ -31,15 +57,14 @@ export default async function RandomBook() {
 
   return (
     <section className="card">
-      <h2 style={{ marginTop: 0, marginBottom: "0.3rem", color: "var(--accent)" }}>
-        No sé qué leer
-      </h2>
-
-      <p className="subtle-text" style={{ marginTop: 0 }}>
-        Te recomendamos esta lectura al azar.
-      </p>
-
-      <div className="grid-2" style={{ marginTop: "1rem" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "minmax(96px, 135px) 1fr",
+          gap: "1rem",
+          alignItems: "center",
+        }}
+      >
         <div>
           {book.cover_url ? (
             <img
@@ -47,19 +72,17 @@ export default async function RandomBook() {
               alt={book.title}
               style={{
                 width: "100%",
-                maxWidth: "320px",
-                height: "auto",
                 aspectRatio: "3 / 4",
                 objectFit: "cover",
                 borderRadius: "14px",
                 border: "1px solid var(--border)",
+                display: "block",
               }}
             />
           ) : (
             <div
               style={{
                 width: "100%",
-                maxWidth: "320px",
                 aspectRatio: "3 / 4",
                 background: "var(--surface-soft)",
                 borderRadius: "14px",
@@ -69,22 +92,66 @@ export default async function RandomBook() {
           )}
         </div>
 
-        <div>
-          <h3 style={{ marginTop: 0, marginBottom: "0.5rem" }}>{book.title}</h3>
-          <p style={{ marginTop: 0 }}>
-            <strong>Autor:</strong> {book.author}
-          </p>
-          <p className="subtle-text">
-            {book.description?.slice(0, 180) || "Sin descripción."}
+        <div style={{ minWidth: 0 }}>
+          <p
+            style={{
+              margin: 0,
+              color: "var(--accent)",
+              fontWeight: 700,
+              fontSize: "0.95rem",
+            }}
+          >
+            No sé qué leer
           </p>
 
-          <Link
-            href={`/libro/${book.id}`}
-            className="primary-link"
-            style={{ marginTop: "1rem" }}
+          <h2
+            style={{
+              margin: "0.25rem 0 0.35rem",
+              fontSize: "1.35rem",
+              lineHeight: 1.15,
+              wordBreak: "break-word",
+              overflowWrap: "anywhere",
+            }}
           >
-            Ver libro
-          </Link>
+            {book.title}
+          </h2>
+
+          <p
+            style={{
+              margin: 0,
+              fontWeight: 600,
+              wordBreak: "break-word",
+              overflowWrap: "anywhere",
+            }}
+          >
+            {book.author}
+          </p>
+
+          <p
+            className="subtle-text"
+            style={{
+              marginTop: "0.55rem",
+              marginBottom: 0,
+              wordBreak: "break-word",
+              overflowWrap: "anywhere",
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+            }}
+          >
+            {book.description || "Sin descripción."}
+          </p>
+
+          <div className="actions-row" style={{ marginTop: "0.85rem" }}>
+            <Link href={`/libro/${book.id}`} className="primary-link">
+              Ver libro
+            </Link>
+
+            <Link href="/" className="secondary-link">
+              Otro recomendado
+            </Link>
+          </div>
         </div>
       </div>
     </section>
