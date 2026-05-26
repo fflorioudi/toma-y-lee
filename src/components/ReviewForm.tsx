@@ -13,6 +13,7 @@ export default function ReviewForm({ bookId }: Props) {
   const router = useRouter();
 
   const [rating, setRating] = useState("5");
+  const [difficulty, setDifficulty] = useState("medium");
   const [reviewText, setReviewText] = useState("");
   const [message, setMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
@@ -39,6 +40,7 @@ export default function ReviewForm({ bookId }: Props) {
       user_id: user.id,
       review_text: reviewText.trim() || null,
       rating: Number(rating),
+      difficulty,
     });
 
     if (error) {
@@ -52,6 +54,7 @@ export default function ReviewForm({ bookId }: Props) {
     setIsSuccess(true);
     setReviewText("");
     setRating("5");
+    setDifficulty("medium");
     setLoading(false);
     router.refresh();
   };
@@ -80,13 +83,26 @@ export default function ReviewForm({ bookId }: Props) {
       </div>
 
       <div className="form-field">
+        <label htmlFor="difficulty">Dificultad de la lectura</label>
+        <select
+          id="difficulty"
+          value={difficulty}
+          onChange={(e) => setDifficulty(e.target.value)}
+        >
+          <option value="easy">Fácil</option>
+          <option value="medium">Media</option>
+          <option value="hard">Difícil</option>
+        </select>
+      </div>
+
+      <div className="form-field">
         <label htmlFor="reviewText">Tu reseña</label>
         <textarea
-            id="reviewText"
-            value={reviewText}
-            onChange={(e) => setReviewText(e.target.value)}
-            rows={4}
-            placeholder="¿Qué te dejó esta lectura? ¿A quién se la recomendarías?"
+          id="reviewText"
+          value={reviewText}
+          onChange={(e) => setReviewText(e.target.value)}
+          rows={4}
+          placeholder="¿Qué te dejó esta lectura? ¿A quién se la recomendarías?"
         />
       </div>
 

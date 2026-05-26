@@ -13,6 +13,8 @@ type PageProps = {
   }>;
 };
 
+type Difficulty = "easy" | "medium" | "hard";
+
 type Book = {
   id: string;
   user_id: string | null;
@@ -33,6 +35,7 @@ type ReviewRow = {
   user_id: string | null;
   review_text: string | null;
   rating: number | null;
+  difficulty: Difficulty | null;
   created_at: string;
   is_hidden: boolean;
 };
@@ -56,6 +59,56 @@ function calcularPromedio(reviews: ReviewWithUser[]) {
 
   const total = ratings.reduce((acc, rating) => acc + rating, 0);
   return (total / ratings.length).toFixed(1);
+}
+
+function getDifficultyLabel(difficulty: Difficulty | null) {
+  if (difficulty === "easy") return "Fácil";
+  if (difficulty === "medium") return "Media";
+  if (difficulty === "hard") return "Difícil";
+  return "Sin dificultad";
+}
+
+function getDifficultyScore(difficulty: Difficulty | null) {
+  if (difficulty === "easy") return 1;
+  if (difficulty === "medium") return 2;
+  if (difficulty === "hard") return 3;
+  return null;
+}
+
+function calcularDificultadPromedio(reviews: ReviewWithUser[]) {
+  const difficulties = reviews.reduce<number[]>((acc, review) => {
+    const score = getDifficultyScore(review.difficulty);
+
+    if (score !== null) {
+      acc.push(score);
+    }
+
+    return acc;
+  }, []);
+
+  if (difficulties.length === 0) return null;
+
+  const total = difficulties.reduce((acc, difficulty) => acc + difficulty, 0);
+  const average = total / difficulties.length;
+
+  if (average < 1.5) {
+    return {
+      label: "Fácil",
+      count: difficulties.length,
+    };
+  }
+
+  if (average < 2.5) {
+    return {
+      label: "Media",
+      count: difficulties.length,
+    };
+  }
+
+  return {
+    label: "Difícil",
+    count: difficulties.length,
+  };
 }
 
 function getFullName(profile?: ProfileRow | null) {
@@ -190,7 +243,7 @@ export default async function LibroDetallePage({ params }: PageProps) {
 
   const { data: reviewsData } = await supabase
     .from("reviews")
-    .select("id, user_id, review_text, rating, created_at, is_hidden")
+    .select("id, user_id, review_text, rating, difficulty, created_at, is_hidden")
     .eq("book_id", id)
     .eq("is_hidden", false)
     .order("created_at", { ascending: false });
@@ -229,6 +282,7 @@ export default async function LibroDetallePage({ params }: PageProps) {
   }));
 
   const promedio = calcularPromedio(reviewsWithUser);
+  const dificultadPromedio = calcularDificultadPromedio(reviewsWithUser);
   const reviewsCount = reviewsWithUser.length;
 
   let relatedBooks: {
@@ -340,6 +394,15 @@ export default async function LibroDetallePage({ params }: PageProps) {
             <p className="subtle-text" style={{ marginTop: "0.35rem" }}>
               👁 {typedBook.view_count ?? 0} vista
               {typedBook.view_count === 1 ? "" : "s"}
+            </p>
+
+            <p className="subtle-text" style={{ marginTop: "0.35rem" }}>
+              📘{" "}
+              {dificultadPromedio
+                ? `Dificultad: ${dificultadPromedio.label} según ${
+                    dificultadPromedio.count
+                  } reseña${dificultadPromedio.count === 1 ? "" : "s"}`
+                : "Dificultad: sin datos todavía"}
             </p>
 
             <div className="top-space">
@@ -536,7 +599,9 @@ export default async function LibroDetallePage({ params }: PageProps) {
                   </p>
 
                   <p className="subtle-text" style={{ margin: 0 }}>
-                    {review.rating ?? "-"} / 5 · {formatDate(review.created_at)}
+                    {review.rating ?? "-"} / 5 ·{" "}
+                    {getDifficultyLabel(review.difficulty)} ·{" "}
+                    {formatDate(review.created_at)}
                   </p>
                 </div>
 
