@@ -6,6 +6,7 @@ import ReportBookButton from "@/components/ReportBookButton";
 import ReportReviewButton from "@/components/ReportReviewButton";
 import FavoriteButton from "@/components/FavoriteButton";
 import BookViewTracker from "@/components/BookViewTracker";
+import ReadingStatusButtons from "@/components/ReadingStatusButtons";
 
 type PageProps = {
   params: Promise<{
@@ -14,6 +15,7 @@ type PageProps = {
 };
 
 type Difficulty = "easy" | "medium" | "hard";
+type ReadingStatus = "reading" | "read";
 
 type Book = {
   id: string;
@@ -347,6 +349,35 @@ export default async function LibroDetallePage({ params }: PageProps) {
     initialIsFavorite = !!favoriteData;
   }
 
+  let initialReadingStatus: ReadingStatus | null = null;
+
+  if (user) {
+    const { data: readingStatusData } = await supabase
+      .from("reading_statuses")
+      .select("status")
+      .eq("user_id", user.id)
+      .eq("book_id", typedBook.id)
+      .maybeSingle();
+
+    initialReadingStatus =
+      readingStatusData?.status === "reading" ||
+      readingStatusData?.status === "read"
+        ? readingStatusData.status
+        : null;
+  }
+
+  const { count: readingCount } = await supabase
+    .from("reading_statuses")
+    .select("*", { count: "exact", head: true })
+    .eq("book_id", typedBook.id)
+    .eq("status", "reading");
+
+  const { count: readCount } = await supabase
+    .from("reading_statuses")
+    .select("*", { count: "exact", head: true })
+    .eq("book_id", typedBook.id)
+    .eq("status", "read");
+
   return (
     <main className="page-container">
       <BookViewTracker bookId={typedBook.id} />
@@ -452,6 +483,13 @@ export default async function LibroDetallePage({ params }: PageProps) {
                 ))}
               </div>
             )}
+
+            <ReadingStatusButtons
+              bookId={typedBook.id}
+              initialStatus={initialReadingStatus}
+              initialReadingCount={readingCount || 0}
+              initialReadCount={readCount || 0}
+            />
 
             <div className="top-space">
               <h2 style={{ marginBottom: "0.5rem" }}>Descripción</h2>

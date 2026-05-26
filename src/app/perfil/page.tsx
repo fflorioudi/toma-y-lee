@@ -11,8 +11,34 @@ type Book = {
   cover_url: string | null;
 };
 
+type MiniBook = {
+  id: string;
+  title: string;
+  author: string;
+  cover_url: string | null;
+};
+
 type FavoriteBook = {
   id: string;
+  books:
+    | {
+        id: string;
+        title: string;
+        author: string;
+        cover_url: string | null;
+      }
+    | {
+        id: string;
+        title: string;
+        author: string;
+        cover_url: string | null;
+      }[]
+    | null;
+};
+
+type ReadingStatusBook = {
+  id: string;
+  status: "reading" | "read";
   books:
     | {
         id: string;
@@ -39,7 +65,84 @@ function getFavoriteBookData(favorite: FavoriteBook) {
   if (Array.isArray(favorite.books)) {
     return favorite.books[0] || null;
   }
+
   return favorite.books || null;
+}
+
+function getReadingBookData(readingStatus: ReadingStatusBook) {
+  if (Array.isArray(readingStatus.books)) {
+    return readingStatus.books[0] || null;
+  }
+
+  return readingStatus.books || null;
+}
+
+function BookMiniCard({
+  book,
+  secondaryAction,
+}: {
+  book: MiniBook;
+  secondaryAction?: React.ReactNode;
+}) {
+  return (
+    <article className="card card-hover">
+      {book.cover_url ? (
+        <img
+          src={book.cover_url}
+          alt={book.title}
+          style={{
+            width: "100%",
+            height: "220px",
+            objectFit: "cover",
+            borderRadius: "14px",
+            border: "1px solid var(--border)",
+            marginBottom: "0.9rem",
+          }}
+        />
+      ) : (
+        <div
+          style={{
+            width: "100%",
+            height: "220px",
+            background: "var(--surface-soft)",
+            borderRadius: "14px",
+            border: "1px solid var(--border)",
+            marginBottom: "0.9rem",
+          }}
+        />
+      )}
+
+      <h3
+        style={{
+          marginTop: 0,
+          marginBottom: "0.35rem",
+          wordBreak: "break-word",
+          overflowWrap: "anywhere",
+        }}
+      >
+        {book.title}
+      </h3>
+
+      <p
+        className="subtle-text"
+        style={{
+          marginTop: 0,
+          wordBreak: "break-word",
+          overflowWrap: "anywhere",
+        }}
+      >
+        {book.author}
+      </p>
+
+      <div className="actions-row" style={{ marginTop: "1rem" }}>
+        <Link href={`/libro/${book.id}`} className="primary-link">
+          Ver libro
+        </Link>
+
+        {secondaryAction}
+      </div>
+    </article>
+  );
 }
 
 export default async function PerfilPage() {
@@ -84,6 +187,21 @@ export default async function PerfilPage() {
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
+  const { data: readingStatusesData } = await supabase
+    .from("reading_statuses")
+    .select(`
+      id,
+      status,
+      books (
+        id,
+        title,
+        author,
+        cover_url
+      )
+    `)
+    .eq("user_id", user.id)
+    .order("updated_at", { ascending: false });
+
   if (error) {
     return (
       <main className="page-container">
@@ -95,11 +213,27 @@ export default async function PerfilPage() {
 
   const typedBooks = (books || []) as Book[];
   const typedFavorites = (favoritesData || []) as FavoriteBook[];
+  const typedReadingStatuses = (readingStatusesData || []) as ReadingStatusBook[];
+
   const typedProfile = (profile || {
     name: "",
     last_name: "",
     role: "user",
   }) as Profile;
+
+  const readingNow = typedReadingStatuses
+    .filter((item) => item.status === "reading")
+    .map(getReadingBookData)
+    .filter((book): book is MiniBook => !!book);
+
+  const alreadyRead = typedReadingStatuses
+    .filter((item) => item.status === "read")
+    .map(getReadingBookData)
+    .filter((book): book is MiniBook => !!book);
+
+  const favoriteBooks = typedFavorites
+    .map(getFavoriteBookData)
+    .filter((book): book is MiniBook => !!book);
 
   return (
     <main className="page-container">
@@ -107,7 +241,10 @@ export default async function PerfilPage() {
         <h1 className="section-title" style={{ color: "var(--accent)" }}>
           Mi perfil
         </h1>
-        <p className="subtle-text" style={{ marginTop: 0, wordBreak: "break-word" }}>
+        <p
+          className="subtle-text"
+          style={{ marginTop: 0, wordBreak: "break-word" }}
+        >
           {user.email}
         </p>
       </section>
@@ -141,6 +278,38 @@ export default async function PerfilPage() {
 
           <div className="card" style={{ boxShadow: "none" }}>
             <p className="subtle-text" style={{ marginTop: 0 }}>
+              Leyendo ahora
+            </p>
+            <p
+              style={{
+                margin: 0,
+                fontSize: "1.8rem",
+                fontWeight: 700,
+                color: "var(--accent)",
+              }}
+            >
+              {readingNow.length}
+            </p>
+          </div>
+
+          <div className="card" style={{ boxShadow: "none" }}>
+            <p className="subtle-text" style={{ marginTop: 0 }}>
+              Libros leídos
+            </p>
+            <p
+              style={{
+                margin: 0,
+                fontSize: "1.8rem",
+                fontWeight: 700,
+                color: "var(--accent)",
+              }}
+            >
+              {alreadyRead.length}
+            </p>
+          </div>
+
+          <div className="card" style={{ boxShadow: "none" }}>
+            <p className="subtle-text" style={{ marginTop: 0 }}>
               Reseñas realizadas
             </p>
             <p
@@ -167,7 +336,7 @@ export default async function PerfilPage() {
                 color: "var(--accent)",
               }}
             >
-              {typedFavorites.length}
+              {favoriteBooks.length}
             </p>
           </div>
         </div>
@@ -182,115 +351,103 @@ export default async function PerfilPage() {
       </section>
 
       <section className="top-space-lg">
-        <h2 className="section-title" style={{ fontSize: "2rem", color: "var(--accent)" }}>
-          Mis favoritos
+        <h2
+          className="section-title"
+          style={{ fontSize: "2rem", color: "var(--accent)" }}
+        >
+          Leyendo ahora
         </h2>
 
-        {typedFavorites.length === 0 ? (
-          <p className="empty-state">Todavía no guardaste libros en favoritos.</p>
+        <p className="subtle-text" style={{ marginTop: 0 }}>
+          Libros que marcaste como lectura actual.
+        </p>
+
+        {readingNow.length === 0 ? (
+          <p className="empty-state">No tenés libros en lectura ahora.</p>
         ) : (
           <div className="grid-auto">
-            {typedFavorites.map((favorite) => {
-              const book = getFavoriteBookData(favorite);
-              if (!book) return null;
-
-              return (
-                <article key={favorite.id} className="card card-hover">
-                  {book.cover_url ? (
-                    <img
-                      src={book.cover_url}
-                      alt={book.title}
-                      style={{
-                        width: "100%",
-                        height: "220px",
-                        objectFit: "cover",
-                        borderRadius: "14px",
-                        border: "1px solid var(--border)",
-                        marginBottom: "0.9rem",
-                      }}
-                    />
-                  ) : (
-                    <div
-                      style={{
-                        width: "100%",
-                        height: "220px",
-                        background: "var(--surface-soft)",
-                        borderRadius: "14px",
-                        border: "1px solid var(--border)",
-                        marginBottom: "0.9rem",
-                      }}
-                    />
-                  )}
-
-                  <h3 style={{ marginTop: 0, marginBottom: "0.35rem" }}>{book.title}</h3>
-                  <p className="subtle-text" style={{ marginTop: 0 }}>
-                    {book.author}
-                  </p>
-
-                  <div className="actions-row" style={{ marginTop: "1rem" }}>
-                    <Link href={`/libro/${book.id}`} className="primary-link">
-                      Ver libro
-                    </Link>
-                  </div>
-                </article>
-              );
-            })}
+            {readingNow.map((book) => (
+              <BookMiniCard key={book.id} book={book} />
+            ))}
           </div>
         )}
       </section>
 
       <section className="top-space-lg">
-        <h2 className="section-title" style={{ fontSize: "2rem", color: "var(--accent)" }}>
+        <h2
+          className="section-title"
+          style={{ fontSize: "2rem", color: "var(--accent)" }}
+        >
+          Ya leí
+        </h2>
+
+        <p className="subtle-text" style={{ marginTop: 0 }}>
+          Tu historial personal de lecturas dentro de Toma y lee.
+        </p>
+
+        {alreadyRead.length === 0 ? (
+          <p className="empty-state">Todavía no marcaste libros como leídos.</p>
+        ) : (
+          <div className="grid-auto">
+            {alreadyRead.map((book) => (
+              <BookMiniCard key={book.id} book={book} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="top-space-lg">
+        <h2
+          className="section-title"
+          style={{ fontSize: "2rem", color: "var(--accent)" }}
+        >
+          Mis favoritos
+        </h2>
+
+        <p className="subtle-text" style={{ marginTop: 0 }}>
+          Libros que guardaste para volver a ellos más adelante.
+        </p>
+
+        {favoriteBooks.length === 0 ? (
+          <p className="empty-state">Todavía no guardaste libros en favoritos.</p>
+        ) : (
+          <div className="grid-auto">
+            {favoriteBooks.map((book) => (
+              <BookMiniCard key={book.id} book={book} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="top-space-lg">
+        <h2
+          className="section-title"
+          style={{ fontSize: "2rem", color: "var(--accent)" }}
+        >
           Mis libros
         </h2>
+
+        <p className="subtle-text" style={{ marginTop: 0 }}>
+          Libros que compartiste con la biblioteca.
+        </p>
 
         {typedBooks.length === 0 ? (
           <p className="empty-state">Todavía no subiste libros.</p>
         ) : (
           <div className="grid-auto">
             {typedBooks.map((book) => (
-              <article key={book.id} className="card card-hover">
-                {book.cover_url ? (
-                  <img
-                    src={book.cover_url}
-                    alt={book.title}
-                    style={{
-                      width: "100%",
-                      height: "220px",
-                      objectFit: "cover",
-                      borderRadius: "14px",
-                      border: "1px solid var(--border)",
-                      marginBottom: "0.9rem",
-                    }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: "100%",
-                      height: "220px",
-                      background: "var(--surface-soft)",
-                      borderRadius: "14px",
-                      border: "1px solid var(--border)",
-                      marginBottom: "0.9rem",
-                    }}
-                  />
-                )}
-
-                <h3 style={{ marginTop: 0, marginBottom: "0.35rem" }}>{book.title}</h3>
-                <p className="subtle-text" style={{ marginTop: 0 }}>
-                  {book.author}
-                </p>
-
-                <div className="actions-row" style={{ marginTop: "1rem" }}>
-                  <Link href={`/libro/${book.id}`} className="primary-link">
-                    Ver libro
-                  </Link>
-
-                  <Link href={`/perfil/libros/${book.id}/editar`} className="secondary-link">
+              <BookMiniCard
+                key={book.id}
+                book={book}
+                secondaryAction={
+                  <Link
+                    href={`/perfil/libros/${book.id}/editar`}
+                    className="secondary-link"
+                  >
                     Editar
                   </Link>
-                </div>
-              </article>
+                }
+              />
             ))}
           </div>
         )}
