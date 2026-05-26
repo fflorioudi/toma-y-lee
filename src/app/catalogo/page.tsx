@@ -11,6 +11,8 @@ type PageProps = {
   }>;
 };
 
+type Difficulty = "easy" | "medium" | "hard";
+
 type BookTagRow = {
   tags:
     | {
@@ -54,26 +56,84 @@ type Category = {
 type ReviewRating = {
   book_id: string | null;
   rating: number | null;
+  difficulty: Difficulty | null;
 };
 
+type BookStats = {
+  average: number;
+  count: number;
+  difficultyLabel: string | null;
+  difficultyCount: number;
+};
+
+function getDifficultyScore(difficulty: Difficulty | null) {
+  if (difficulty === "easy") return 1;
+  if (difficulty === "medium") return 2;
+  if (difficulty === "hard") return 3;
+  return null;
+}
+
+function getDifficultyLabelFromAverage(average: number) {
+  if (average < 1.5) return "Fácil";
+  if (average < 2.5) return "Media";
+  return "Difícil";
+}
+
 function calcularEstadisticas(reviews: ReviewRating[]) {
-  const map = new Map<string, { total: number; count: number }>();
+  const map = new Map<
+    string,
+    {
+      ratingTotal: number;
+      ratingCount: number;
+      difficultyTotal: number;
+      difficultyCount: number;
+    }
+  >();
 
   for (const review of reviews) {
-    if (!review.book_id || review.rating === null) continue;
+    if (!review.book_id) continue;
 
-    const current = map.get(review.book_id) || { total: 0, count: 0 };
-    current.total += review.rating;
-    current.count += 1;
+    const current = map.get(review.book_id) || {
+      ratingTotal: 0,
+      ratingCount: 0,
+      difficultyTotal: 0,
+      difficultyCount: 0,
+    };
+
+    if (review.rating !== null) {
+      current.ratingTotal += review.rating;
+      current.ratingCount += 1;
+    }
+
+    const difficultyScore = getDifficultyScore(review.difficulty);
+
+    if (difficultyScore !== null) {
+      current.difficultyTotal += difficultyScore;
+      current.difficultyCount += 1;
+    }
+
     map.set(review.book_id, current);
   }
 
-  const stats = new Map<string, { average: number; count: number }>();
+  const stats = new Map<string, BookStats>();
 
   for (const [bookId, data] of map.entries()) {
+    const average =
+      data.ratingCount > 0 ? data.ratingTotal / data.ratingCount : 0;
+
+    const difficultyAverage =
+      data.difficultyCount > 0
+        ? data.difficultyTotal / data.difficultyCount
+        : null;
+
     stats.set(bookId, {
-      average: data.total / data.count,
-      count: data.count,
+      average,
+      count: data.ratingCount,
+      difficultyLabel:
+        difficultyAverage !== null
+          ? getDifficultyLabelFromAverage(difficultyAverage)
+          : null,
+      difficultyCount: data.difficultyCount,
     });
   }
 
@@ -181,12 +241,12 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
   const typedBooks = (books || []) as Book[];
   const bookIds = typedBooks.map((book) => book.id);
 
-  let ratingsStatsMap = new Map<string, { average: number; count: number }>();
+  let ratingsStatsMap = new Map<string, BookStats>();
 
   if (bookIds.length > 0) {
     const { data: reviewsData } = await supabase
       .from("reviews")
-      .select("book_id, rating")
+      .select("book_id, rating, difficulty")
       .in("book_id", bookIds)
       .eq("is_hidden", false);
 
@@ -376,17 +436,27 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
 
                     <p
                       style={{
-                        marginTop: "0.45rem",
+                        marginTop: "0.55rem",
                         fontSize: "0.95rem",
                         color: "var(--accent)",
                         fontWeight: 600,
                       }}
                     >
-                      {stats
+                      {stats && stats.count > 0
                         ? `⭐ ${stats.average.toFixed(1)} · ${
                             stats.count
                           } reseña${stats.count === 1 ? "" : "s"}`
                         : "Sin reseñas"}
+                    </p>
+
+                    <p
+                      className="subtle-text"
+                      style={{ marginTop: "0.35rem", marginBottom: 0 }}
+                    >
+                      📘{" "}
+                      {stats?.difficultyLabel
+                        ? `Dificultad: ${stats.difficultyLabel}`
+                        : "Dificultad: sin datos"}
                     </p>
 
                     <p
