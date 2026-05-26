@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
@@ -64,6 +64,8 @@ export default function EditBookForm({ book }: Props) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [showTagPicker, setShowTagPicker] = useState(false);
+  const [tagSearch, setTagSearch] = useState("");
 
   const [title, setTitle] = useState(book.title);
   const [author, setAuthor] = useState(book.author);
@@ -118,12 +120,29 @@ export default function EditBookForm({ book }: Props) {
     loadData();
   }, [supabase, book.id]);
 
+  const selectedTags = useMemo(() => {
+    return tags.filter((tag) => selectedTagIds.includes(tag.id));
+  }, [tags, selectedTagIds]);
+
+  const filteredTags = useMemo(() => {
+    const search = tagSearch.trim().toLowerCase();
+
+    if (!search) return tags;
+
+    return tags.filter((tag) => tag.name.toLowerCase().includes(search));
+  }, [tags, tagSearch]);
+
   const toggleTag = (tagId: string) => {
     setSelectedTagIds((current) =>
       current.includes(tagId)
         ? current.filter((id) => id !== tagId)
         : [...current, tagId]
     );
+  };
+
+  const clearSelectedTags = () => {
+    setSelectedTagIds([]);
+    setTagSearch("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -401,43 +420,126 @@ export default function EditBookForm({ book }: Props) {
           Tocá los tags para agregarlos o sacarlos del libro.
         </p>
 
-        {tags.length === 0 ? (
-          <p className="empty-state" style={{ margin: 0 }}>
-            Todavía no hay tags cargados.
-          </p>
-        ) : (
+        {selectedTags.length > 0 ? (
           <div
             style={{
               display: "flex",
               flexWrap: "wrap",
-              gap: "0.6rem",
+              gap: "0.5rem",
+              marginBottom: "0.75rem",
             }}
           >
-            {tags.map((tag) => {
-              const isSelected = selectedTagIds.includes(tag.id);
+            {selectedTags.map((tag) => (
+              <button
+                key={tag.id}
+                type="button"
+                onClick={() => toggleTag(tag.id)}
+                style={{
+                  padding: "0.45rem 0.75rem",
+                  borderRadius: "999px",
+                  border: "1px solid var(--accent)",
+                  background: "var(--accent)",
+                  color: "var(--white)",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                {tag.name} ×
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="subtle-text" style={{ marginTop: 0 }}>
+            No seleccionaste tags todavía.
+          </p>
+        )}
 
-              return (
-                <button
-                  key={tag.id}
-                  type="button"
-                  onClick={() => toggleTag(tag.id)}
-                  style={{
-                    padding: "0.55rem 0.85rem",
-                    borderRadius: "999px",
-                    border: isSelected
-                      ? "1px solid var(--accent)"
-                      : "1px solid var(--border)",
-                    background: isSelected ? "var(--accent)" : "var(--surface)",
-                    color: isSelected ? "var(--white)" : "var(--text)",
-                    fontWeight: isSelected ? 700 : 500,
-                    cursor: "pointer",
-                    transition: "all 0.15s ease",
-                  }}
-                >
-                  {tag.name}
-                </button>
-              );
-            })}
+        <div className="actions-row" style={{ gap: "0.5rem" }}>
+          <button
+            type="button"
+            onClick={() => setShowTagPicker((current) => !current)}
+            className="secondary-link"
+            style={{ border: "1px solid var(--border)" }}
+          >
+            {showTagPicker ? "Ocultar tags" : "Elegir tags"}
+          </button>
+
+          {selectedTags.length > 0 && (
+            <button
+              type="button"
+              onClick={clearSelectedTags}
+              style={{
+                background: "transparent",
+                color: "var(--accent)",
+                border: "1px solid var(--accent)",
+              }}
+            >
+              Limpiar
+            </button>
+          )}
+        </div>
+
+        {showTagPicker && (
+          <div
+            style={{
+              marginTop: "1rem",
+              padding: "1rem",
+              border: "1px solid var(--border)",
+              borderRadius: "16px",
+              background: "var(--surface-soft)",
+            }}
+          >
+            <input
+              value={tagSearch}
+              onChange={(e) => setTagSearch(e.target.value)}
+              placeholder="Buscar tag..."
+              style={{ marginBottom: "0.9rem" }}
+            />
+
+            {filteredTags.length === 0 ? (
+              <p className="empty-state" style={{ margin: 0 }}>
+                No encontramos tags con esa búsqueda.
+              </p>
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "0.55rem",
+                  maxHeight: "230px",
+                  overflowY: "auto",
+                  paddingRight: "0.25rem",
+                }}
+              >
+                {filteredTags.map((tag) => {
+                  const isSelected = selectedTagIds.includes(tag.id);
+
+                  return (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => toggleTag(tag.id)}
+                      style={{
+                        padding: "0.5rem 0.8rem",
+                        borderRadius: "999px",
+                        border: isSelected
+                          ? "1px solid var(--accent)"
+                          : "1px solid var(--border)",
+                        background: isSelected
+                          ? "var(--accent)"
+                          : "var(--surface)",
+                        color: isSelected ? "var(--white)" : "var(--text)",
+                        fontWeight: isSelected ? 700 : 500,
+                        cursor: "pointer",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      {tag.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>
