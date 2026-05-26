@@ -55,8 +55,8 @@ function BookCardItem({ book }: { book: BookCard }) {
             marginBottom: "0.35rem",
             fontSize: "1.05rem",
             lineHeight: 1.2,
-            wordBreak: "break-word",
-            overflowWrap: "anywhere",
+            wordBreak: "normal",
+            overflowWrap: "break-word",
           }}
         >
           {book.title}
@@ -66,8 +66,8 @@ function BookCardItem({ book }: { book: BookCard }) {
           className="subtle-text"
           style={{
             marginTop: 0,
-            wordBreak: "break-word",
-            overflowWrap: "anywhere",
+            wordBreak: "normal",
+            overflowWrap: "break-word",
           }}
         >
           {book.author}
@@ -77,8 +77,8 @@ function BookCardItem({ book }: { book: BookCard }) {
           className="subtle-text"
           style={{
             marginTop: "0.5rem",
-            wordBreak: "break-word",
-            overflowWrap: "anywhere",
+            wordBreak: "normal",
+            overflowWrap: "break-word",
             display: "-webkit-box",
             WebkitLineClamp: 3,
             WebkitBoxOrient: "vertical",
@@ -130,19 +130,28 @@ function SectionHeader({
         marginBottom: "1rem",
       }}
     >
-      <div>
+      <div style={{ minWidth: 0 }}>
         <h2
           className="section-title"
           style={{
             fontSize: "1.85rem",
             color: "var(--accent)",
             marginBottom: "0.35rem",
+            wordBreak: "normal",
+            overflowWrap: "break-word",
           }}
         >
           {title}
         </h2>
 
-        <p className="subtle-text" style={{ marginTop: 0 }}>
+        <p
+          className="subtle-text"
+          style={{
+            marginTop: 0,
+            wordBreak: "normal",
+            overflowWrap: "break-word",
+          }}
+        >
           {description}
         </p>
       </div>
@@ -190,12 +199,13 @@ export default async function HomePage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "minmax(0, 1.2fr) minmax(260px, 0.8fr)",
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(min(100%, 320px), 1fr))",
             gap: "1.5rem",
             alignItems: "center",
           }}
         >
-          <div>
+          <div style={{ minWidth: 0 }}>
             <p
               style={{
                 marginTop: 0,
@@ -215,7 +225,10 @@ export default async function HomePage() {
               style={{
                 margin: 0,
                 textAlign: "left",
-                fontSize: "clamp(2.35rem, 6vw, 4.2rem)",
+                fontSize: "clamp(2.4rem, 10vw, 4.2rem)",
+                lineHeight: 1.05,
+                wordBreak: "normal",
+                overflowWrap: "break-word",
               }}
             >
               Toma y lee
@@ -227,6 +240,8 @@ export default async function HomePage() {
                 margin: "1rem 0 0",
                 maxWidth: "680px",
                 textAlign: "left",
+                wordBreak: "normal",
+                overflowWrap: "break-word",
               }}
             >
               Biblioteca online colaborativa. Un lugar para compartir libros,
@@ -237,6 +252,10 @@ export default async function HomePage() {
             <div className="actions-row top-space">
               <Link href="/catalogo" className="primary-link">
                 Explorar catálogo
+              </Link>
+
+              <Link href="/publicar" className="secondary-link">
+                Compartir un libro
               </Link>
 
               <Link href="/sobre" className="secondary-link">
@@ -251,21 +270,30 @@ export default async function HomePage() {
               borderRadius: "24px",
               background: "var(--surface-soft)",
               border: "1px solid var(--border)",
+              minWidth: 0,
             }}
           >
             <p
-  style={{
-    margin: 0,
-    color: "var(--accent)",
-    fontWeight: 700,
-  }}
->
-  Una biblioteca para caminar
-</p>
+              style={{
+                margin: 0,
+                color: "var(--accent)",
+                fontWeight: 700,
+              }}
+            >
+              Una biblioteca para caminar
+            </p>
 
-<p className="subtle-text" style={{ marginBottom: 0 }}>
-  Encontrá libros, guardá favoritos, marcá tus lecturas y compartí lo que te ayudó.
-</p>
+            <p
+              className="subtle-text"
+              style={{
+                marginBottom: 0,
+                wordBreak: "normal",
+                overflowWrap: "break-word",
+              }}
+            >
+              Encontrá libros, guardá favoritos, marcá tus lecturas y compartí
+              lo que te ayudó.
+            </p>
           </div>
         </div>
       </section>
@@ -332,12 +360,26 @@ export default async function HomePage() {
             flexWrap: "wrap",
           }}
         >
-          <div style={{ maxWidth: "760px" }}>
-            <h2 style={{ marginTop: 0, color: "var(--accent)" }}>
+          <div style={{ maxWidth: "760px", minWidth: 0 }}>
+            <h2
+              style={{
+                marginTop: 0,
+                color: "var(--accent)",
+                wordBreak: "normal",
+                overflowWrap: "break-word",
+              }}
+            >
               ¿Qué es Toma y lee?
             </h2>
 
-            <p className="subtle-text" style={{ marginBottom: 0 }}>
+            <p
+              className="subtle-text"
+              style={{
+                marginBottom: 0,
+                wordBreak: "normal",
+                overflowWrap: "break-word",
+              }}
+            >
               Un espacio para reunir libros, PDFs, audiolibros y recursos que
               ayuden a leer, escuchar, compartir y crecer en comunidad.
             </p>

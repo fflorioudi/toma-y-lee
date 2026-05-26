@@ -20,30 +20,9 @@ export default async function RandomBook() {
   if (error || !books || books.length === 0) {
     return (
       <section className="card">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            gap: "1rem",
-            alignItems: "center",
-            flexWrap: "wrap",
-          }}
-        >
-          <div>
-            <p
-              style={{
-                margin: 0,
-                color: "var(--accent)",
-                fontWeight: 700,
-                letterSpacing: "0.02em",
-              }}
-            >
-              Sugerencia rápida
-            </p>
-
-            <h2 style={{ margin: "0.25rem 0 0" }}>No sé qué leer</h2>
-          </div>
-        </div>
+        <h2 style={{ marginTop: 0, color: "var(--accent)" }}>
+          No sé qué leer
+        </h2>
 
         <p className="empty-state" style={{ marginBottom: 0 }}>
           Todavía no hay libros cargados.
@@ -59,13 +38,19 @@ export default async function RandomBook() {
     <section className="card">
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(96px, 135px) 1fr",
-          gap: "1rem",
+          display: "flex",
+          gap: "1.25rem",
           alignItems: "center",
+          flexWrap: "wrap",
         }}
       >
-        <div>
+        <div
+          style={{
+            width: "140px",
+            maxWidth: "100%",
+            flex: "0 0 140px",
+          }}
+        >
           {book.cover_url ? (
             <img
               src={book.cover_url}
@@ -92,7 +77,12 @@ export default async function RandomBook() {
           )}
         </div>
 
-        <div style={{ minWidth: 0 }}>
+        <div
+          style={{
+            flex: "1 1 320px",
+            minWidth: 0,
+          }}
+        >
           <p
             style={{
               margin: 0,
@@ -109,8 +99,8 @@ export default async function RandomBook() {
               margin: "0.25rem 0 0.35rem",
               fontSize: "1.35rem",
               lineHeight: 1.15,
-              wordBreak: "break-word",
-              overflowWrap: "anywhere",
+              wordBreak: "normal",
+              overflowWrap: "break-word",
             }}
           >
             {book.title}
@@ -120,8 +110,8 @@ export default async function RandomBook() {
             style={{
               margin: 0,
               fontWeight: 600,
-              wordBreak: "break-word",
-              overflowWrap: "anywhere",
+              wordBreak: "normal",
+              overflowWrap: "break-word",
             }}
           >
             {book.author}
@@ -132,8 +122,8 @@ export default async function RandomBook() {
             style={{
               marginTop: "0.55rem",
               marginBottom: 0,
-              wordBreak: "break-word",
-              overflowWrap: "anywhere",
+              wordBreak: "normal",
+              overflowWrap: "break-word",
               display: "-webkit-box",
               WebkitLineClamp: 2,
               WebkitBoxOrient: "vertical",

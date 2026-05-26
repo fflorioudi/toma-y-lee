@@ -13,12 +13,12 @@ export default function SobrePage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "minmax(0, 1.15fr) minmax(240px, 0.85fr)",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))",
             gap: "1.5rem",
             alignItems: "center",
           }}
         >
-          <div>
+          <div style={{ minWidth: 0 }}>
             <p
               style={{
                 marginTop: 0,
@@ -38,7 +38,10 @@ export default function SobrePage() {
               style={{
                 margin: 0,
                 textAlign: "left",
-                fontSize: "clamp(2.25rem, 6vw, 4rem)",
+                fontSize: "clamp(2.4rem, 10vw, 4rem)",
+                lineHeight: 1.05,
+                wordBreak: "normal",
+                overflowWrap: "break-word",
               }}
             >
               Toma y lee
@@ -50,6 +53,8 @@ export default function SobrePage() {
                 margin: "1rem 0 0",
                 maxWidth: "720px",
                 textAlign: "left",
+                wordBreak: "normal",
+                overflowWrap: "break-word",
               }}
             >
               Una biblioteca online colaborativa para encontrar, guardar y
@@ -57,15 +62,7 @@ export default function SobrePage() {
               interioridad.
             </p>
 
-            <div className="actions-row top-space">
-              <Link href="/catalogo" className="primary-link">
-                Explorar catálogo
-              </Link>
-
-              <Link href="/publicar" className="secondary-link">
-                Compartir un libro
-              </Link>
-            </div>
+           
           </div>
 
           <div
@@ -74,6 +71,7 @@ export default function SobrePage() {
               borderRadius: "24px",
               background: "var(--surface-soft)",
               border: "1px solid var(--border)",
+              minWidth: 0,
             }}
           >
             <p
@@ -86,7 +84,14 @@ export default function SobrePage() {
               Una biblioteca para caminar
             </p>
 
-            <p className="subtle-text" style={{ marginBottom: 0 }}>
+            <p
+              className="subtle-text"
+              style={{
+                marginBottom: 0,
+                wordBreak: "normal",
+                overflowWrap: "break-word",
+              }}
+            >
               Toma y lee nació para que una buena lectura no quede perdida, sino
               que pueda llegar a alguien que la necesita.
             </p>
@@ -131,7 +136,7 @@ export default function SobrePage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
             gap: "1rem",
           }}
         >
@@ -198,12 +203,7 @@ export default function SobrePage() {
       </section>
 
       <section className="top-space-lg">
-        <div
-          className="card"
-          style={{
-            padding: "1.6rem",
-          }}
-        >
+        <div className="card" style={{ padding: "1.6rem" }}>
           <h2 style={{ marginTop: 0, color: "var(--accent)" }}>
             ¿Por qué nació?
           </h2>
@@ -229,17 +229,23 @@ export default function SobrePage() {
           style={{
             padding: "1.6rem",
             display: "grid",
-            gridTemplateColumns: "minmax(0, 1fr) minmax(220px, 0.55fr)",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
             gap: "1rem",
             alignItems: "center",
           }}
         >
-          <div>
+          <div style={{ minWidth: 0 }}>
             <h2 style={{ marginTop: 0, color: "var(--accent)" }}>
               ¿Qué podés encontrar?
             </h2>
 
-            <p className="subtle-text">
+            <p
+              className="subtle-text"
+              style={{
+                wordBreak: "normal",
+                overflowWrap: "break-word",
+              }}
+            >
               Libros y recursos relacionados con espiritualidad, oración,
               formación cristiana, santos, Biblia, vida comunitaria,
               interioridad, testimonios, doctrina, Iglesia y crecimiento
@@ -264,6 +270,7 @@ export default function SobrePage() {
               borderRadius: "18px",
               background: "var(--surface-soft)",
               border: "1px solid var(--border)",
+              minWidth: 0,
             }}
           >
             <p
@@ -277,7 +284,14 @@ export default function SobrePage() {
               La idea es sencilla
             </p>
 
-            <p className="subtle-text" style={{ marginBottom: 0 }}>
+            <p
+              className="subtle-text"
+              style={{
+                marginBottom: 0,
+                wordBreak: "normal",
+                overflowWrap: "break-word",
+              }}
+            >
               Que una lectura que ayudó a alguien pueda acompañar también a
               otra persona.
             </p>
@@ -286,12 +300,7 @@ export default function SobrePage() {
       </section>
 
       <section className="top-space">
-        <div
-          className="card"
-          style={{
-            padding: "1.6rem",
-          }}
-        >
+        <div className="card" style={{ padding: "1.6rem" }}>
           <h2 style={{ marginTop: 0, color: "var(--accent)" }}>
             ¿Quién lo creó?
           </h2>
@@ -323,12 +332,19 @@ export default function SobrePage() {
             flexWrap: "wrap",
           }}
         >
-          <div style={{ maxWidth: "720px" }}>
+          <div style={{ maxWidth: "720px", minWidth: 0 }}>
             <h2 style={{ marginTop: 0, color: "var(--accent)" }}>
               ¿Cómo colaborar?
             </h2>
 
-            <p className="subtle-text" style={{ marginBottom: 0 }}>
+            <p
+              className="subtle-text"
+              style={{
+                marginBottom: 0,
+                wordBreak: "normal",
+                overflowWrap: "break-word",
+              }}
+            >
               Cualquier usuario registrado puede colaborar compartiendo un
               libro, un PDF, un enlace de lectura o un audiolibro. La idea no es
               subir contenido por subir, sino recomendar recursos que puedan
@@ -379,6 +395,8 @@ export default function SobrePage() {
             style={{
               maxWidth: "680px",
               margin: "0.75rem auto 1.25rem",
+              wordBreak: "normal",
+              overflowWrap: "break-word",
             }}
           >
             En Instagram compartimos recomendaciones, frases, libros, recursos y
