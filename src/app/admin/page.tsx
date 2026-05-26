@@ -117,12 +117,16 @@ export default async function AdminPage({ searchParams }: PageProps) {
           Panel admin
         </h1>
         <p className="subtle-text" style={{ marginTop: 0 }}>
-          Gestioná libros, categorías y accesos del contenido compartido.
+          Gestioná libros, categorías, tags y accesos del contenido compartido.
         </p>
 
         <div className="actions-row top-space">
           <Link href="/admin/categorias" className="primary-link">
             Gestionar categorías
+          </Link>
+
+          <Link href="/admin/tags" className="secondary-link">
+            Gestionar tags
           </Link>
         </div>
       </section>
@@ -180,19 +184,27 @@ export default async function AdminPage({ searchParams }: PageProps) {
           <div className="admin-stack">
             {typedBooks.map((book) => (
               <article key={book.id} className="card">
-                <h3 style={{ marginTop: 0, marginBottom: "0.4rem" }}>{book.title}</h3>
+                <h3 style={{ marginTop: 0, marginBottom: "0.4rem" }}>
+                  {book.title}
+                </h3>
                 <p className="subtle-text" style={{ marginTop: 0 }}>
                   {book.author}
                 </p>
 
                 <p style={{ marginTop: "0.7rem" }}>
                   <strong>Subido por:</strong>{" "}
-                  {book.user_id ? getFullName(profilesMap.get(book.user_id)) : "Usuario"}
+                  {book.user_id
+                    ? getFullName(profilesMap.get(book.user_id))
+                    : "Usuario"}
                 </p>
 
                 <p>
                   <strong>Estado:</strong>{" "}
-                  <span style={{ color: book.is_hidden ? "var(--accent)" : "var(--text)" }}>
+                  <span
+                    style={{
+                      color: book.is_hidden ? "var(--accent)" : "var(--text)",
+                    }}
+                  >
                     {book.is_hidden ? "Oculto" : "Visible"}
                   </span>
                 </p>

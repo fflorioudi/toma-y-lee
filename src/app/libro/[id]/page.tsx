@@ -50,6 +50,19 @@ type ReviewWithUser = ReviewRow & {
   reviewer_name: string;
 };
 
+type BookTagRow = {
+  tags:
+    | {
+        id: string;
+        name: string;
+      }
+    | {
+        id: string;
+        name: string;
+      }[]
+    | null;
+};
+
 function calcularPromedio(reviews: ReviewWithUser[]) {
   const ratings = reviews
     .map((review) => review.rating)
@@ -229,6 +242,23 @@ export default async function LibroDetallePage({ params }: PageProps) {
   const spotifyEmbedUrl = getSpotifyEmbedUrl(typedBook.audio_url);
   const hasEmbeddedAudio = !!youtubeEmbedUrl || !!spotifyEmbedUrl;
 
+  const { data: bookTagsData } = await supabase
+    .from("book_tags")
+    .select(`
+      tags (
+        id,
+        name
+      )
+    `)
+    .eq("book_id", typedBook.id);
+
+  const bookTags = ((bookTagsData || []) as BookTagRow[])
+    .flatMap((row) => {
+      if (!row.tags) return [];
+      return Array.isArray(row.tags) ? row.tags : [row.tags];
+    })
+    .filter((tag) => tag.id && tag.name);
+
   let uploaderProfile: ProfileRow | null = null;
 
   if (typedBook.user_id) {
@@ -363,7 +393,12 @@ export default async function LibroDetallePage({ params }: PageProps) {
           <div>
             <h1
               className="section-title"
-              style={{ marginBottom: "0.6rem", color: "var(--text)" }}
+              style={{
+                marginBottom: "0.6rem",
+                color: "var(--text)",
+                wordBreak: "break-word",
+                overflowWrap: "anywhere",
+              }}
             >
               {typedBook.title}
             </h1>
@@ -405,9 +440,28 @@ export default async function LibroDetallePage({ params }: PageProps) {
                 : "Dificultad: sin datos todavía"}
             </p>
 
+            {bookTags.length > 0 && (
+              <div
+                className="actions-row"
+                style={{ marginTop: "0.75rem", gap: "0.5rem" }}
+              >
+                {bookTags.map((tag) => (
+                  <span key={tag.id} className="badge">
+                    {tag.name}
+                  </span>
+                ))}
+              </div>
+            )}
+
             <div className="top-space">
               <h2 style={{ marginBottom: "0.5rem" }}>Descripción</h2>
-              <p className="subtle-text">
+              <p
+                className="subtle-text"
+                style={{
+                  wordBreak: "break-word",
+                  overflowWrap: "anywhere",
+                }}
+              >
                 {typedBook.description || "Sin descripción."}
               </p>
             </div>
@@ -429,6 +483,8 @@ export default async function LibroDetallePage({ params }: PageProps) {
                     marginBottom: 0,
                     color: "var(--text-soft)",
                     fontStyle: "italic",
+                    wordBreak: "break-word",
+                    overflowWrap: "anywhere",
                   }}
                 >
                   “{typedBook.featured_quote}”
@@ -605,7 +661,14 @@ export default async function LibroDetallePage({ params }: PageProps) {
                   </p>
                 </div>
 
-                <p className="subtle-text" style={{ marginBottom: 0 }}>
+                <p
+                  className="subtle-text"
+                  style={{
+                    marginBottom: 0,
+                    wordBreak: "break-word",
+                    overflowWrap: "anywhere",
+                  }}
+                >
                   {review.review_text || "Sin texto."}
                 </p>
 

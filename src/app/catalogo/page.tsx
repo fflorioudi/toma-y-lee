@@ -11,6 +11,19 @@ type PageProps = {
   }>;
 };
 
+type BookTagRow = {
+  tags:
+    | {
+        id: string;
+        name: string;
+      }
+    | {
+        id: string;
+        name: string;
+      }[]
+    | null;
+};
+
 type Book = {
   id: string;
   title: string;
@@ -30,6 +43,7 @@ type Book = {
         name: string | null;
       }[]
     | null;
+  book_tags?: BookTagRow[];
 };
 
 type Category = {
@@ -74,6 +88,15 @@ function getCategoryName(book: Book) {
   return book.categories?.name || "Sin categoría";
 }
 
+function getBookTags(book: Book) {
+  return (book.book_tags || [])
+    .flatMap((row) => {
+      if (!row.tags) return [];
+      return Array.isArray(row.tags) ? row.tags : [row.tags];
+    })
+    .filter((tag) => tag.id && tag.name);
+}
+
 export default async function CatalogoPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const supabase = await createClient();
@@ -106,6 +129,12 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
       view_count,
       categories (
         name
+      ),
+      book_tags (
+        tags (
+          id,
+          name
+        )
       )
     `)
     .eq("is_hidden", false);
@@ -263,6 +292,7 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
             {filteredBooks.map((book) => {
               const stats = ratingsStatsMap.get(book.id);
               const views = book.view_count ?? 0;
+              const bookTags = getBookTags(book);
 
               return (
                 <Link
@@ -302,18 +332,47 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
                         fontSize: "1.15rem",
                         marginTop: 0,
                         marginBottom: "0.35rem",
+                        wordBreak: "break-word",
+                        overflowWrap: "anywhere",
                       }}
                     >
                       {book.title}
                     </h2>
 
-                    <p className="subtle-text" style={{ marginTop: 0 }}>
+                    <p
+                      className="subtle-text"
+                      style={{
+                        marginTop: 0,
+                        wordBreak: "break-word",
+                        overflowWrap: "anywhere",
+                      }}
+                    >
                       {book.author}
                     </p>
 
                     <p style={{ marginTop: "0.45rem", fontSize: "0.95rem" }}>
                       <strong>Categoría:</strong> {getCategoryName(book)}
                     </p>
+
+                    {bookTags.length > 0 && (
+                      <div
+                        className="actions-row"
+                        style={{
+                          marginTop: "0.55rem",
+                          gap: "0.45rem",
+                        }}
+                      >
+                        {bookTags.slice(0, 3).map((tag) => (
+                          <span key={tag.id} className="badge">
+                            {tag.name}
+                          </span>
+                        ))}
+
+                        {bookTags.length > 3 && (
+                          <span className="badge">+{bookTags.length - 3}</span>
+                        )}
+                      </div>
+                    )}
 
                     <p
                       style={{
@@ -337,8 +396,19 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
                       👁 {views} vista{views === 1 ? "" : "s"}
                     </p>
 
-                    <p className="subtle-text" style={{ marginTop: "0.75rem" }}>
-                      {book.description?.slice(0, 120) || "Sin descripción."}
+                    <p
+                      className="subtle-text"
+                      style={{
+                        marginTop: "0.75rem",
+                        wordBreak: "break-word",
+                        overflowWrap: "anywhere",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 4,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {book.description || "Sin descripción."}
                     </p>
 
                     <div

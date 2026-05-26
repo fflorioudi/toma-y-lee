@@ -10,6 +10,11 @@ type Category = {
   name: string;
 };
 
+type Tag = {
+  id: string;
+  name: string;
+};
+
 function isValidHttpUrl(value: string) {
   try {
     const url = new URL(value);
@@ -24,6 +29,9 @@ export default function PublicarPage() {
   const router = useRouter();
 
   const [categories, setCategories] = useState<Category[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [description, setDescription] = useState("");
@@ -39,17 +47,33 @@ export default function PublicarPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const loadCategories = async () => {
-      const { data } = await supabase
-        .from("categories")
-        .select("id, name")
-        .order("name", { ascending: true });
+    const loadData = async () => {
+      const [{ data: categoriesData }, { data: tagsData }] = await Promise.all([
+        supabase
+          .from("categories")
+          .select("id, name")
+          .order("name", { ascending: true }),
 
-      setCategories((data || []) as Category[]);
+        supabase
+          .from("tags")
+          .select("id, name")
+          .order("name", { ascending: true }),
+      ]);
+
+      setCategories((categoriesData || []) as Category[]);
+      setTags((tagsData || []) as Tag[]);
     };
 
-    loadCategories();
+    loadData();
   }, [supabase]);
+
+  const toggleTag = (tagId: string) => {
+    setSelectedTagIds((current) =>
+      current.includes(tagId)
+        ? current.filter((id) => id !== tagId)
+        : [...current, tagId]
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -211,23 +235,45 @@ export default function PublicarPage() {
       coverUrl = publicUrlData.publicUrl;
     }
 
-    const { error } = await supabase.from("books").insert({
-      user_id: user.id,
-      title: cleanTitle,
-      author: cleanAuthor,
-      description: cleanDescription || null,
-      external_link: cleanLink || null,
-      audio_url: cleanAudioLink || null,
-      pdf_url: pdfUrl,
-      cover_url: coverUrl,
-      category_id: categoryId || null,
-    });
+    const { data: insertedBook, error } = await supabase
+      .from("books")
+      .insert({
+        user_id: user.id,
+        title: cleanTitle,
+        author: cleanAuthor,
+        description: cleanDescription || null,
+        external_link: cleanLink || null,
+        audio_url: cleanAudioLink || null,
+        pdf_url: pdfUrl,
+        cover_url: coverUrl,
+        category_id: categoryId || null,
+      })
+      .select("id")
+      .single();
 
-    if (error) {
-      setMessage(error.message);
+    if (error || !insertedBook) {
+      setMessage(error?.message || "No se pudo publicar el libro.");
       setIsSuccess(false);
       setLoading(false);
       return;
+    }
+
+    if (selectedTagIds.length > 0) {
+      const tagRows = selectedTagIds.map((tagId) => ({
+        book_id: insertedBook.id,
+        tag_id: tagId,
+      }));
+
+      const { error: tagsError } = await supabase.from("book_tags").insert(tagRows);
+
+      if (tagsError) {
+        setMessage(
+          "El libro se publicó, pero no se pudieron guardar los tags. Revisá las políticas de book_tags."
+        );
+        setIsSuccess(false);
+        setLoading(false);
+        return;
+      }
     }
 
     setMessage("Libro publicado correctamente");
@@ -238,6 +284,7 @@ export default function PublicarPage() {
     setLink("");
     setAudioLink("");
     setCategoryId("");
+    setSelectedTagIds([]);
     setPdfFile(null);
     setCoverFile(null);
     setCaptchaToken("");
@@ -256,8 +303,8 @@ export default function PublicarPage() {
           Compartir un libro
         </h1>
         <p className="subtle-text" style={{ marginTop: 0, maxWidth: "760px" }}>
-          Sumá una lectura a la biblioteca colaborativa para que otros
-          también puedan encontrarla y aprovecharla.
+          Sumá una lectura a la biblioteca colaborativa para que otros también
+          puedan encontrarla y aprovecharla.
         </p>
       </section>
 
@@ -305,6 +352,54 @@ export default function PublicarPage() {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="form-field">
+            <label>Tags</label>
+
+            <p className="subtle-text" style={{ marginTop: 0, marginBottom: "0.75rem" }}>
+              Elegí uno o varios temas relacionados con el libro.
+            </p>
+
+            {tags.length === 0 ? (
+              <p className="empty-state" style={{ margin: 0 }}>
+                Todavía no hay tags cargados.
+              </p>
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "0.6rem",
+                }}
+              >
+                {tags.map((tag) => {
+                  const isSelected = selectedTagIds.includes(tag.id);
+
+                  return (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => toggleTag(tag.id)}
+                      style={{
+                        padding: "0.55rem 0.85rem",
+                        borderRadius: "999px",
+                        border: isSelected
+                          ? "1px solid var(--accent)"
+                          : "1px solid var(--border)",
+                        background: isSelected ? "var(--accent)" : "var(--surface)",
+                        color: isSelected ? "var(--white)" : "var(--text)",
+                        fontWeight: isSelected ? 700 : 500,
+                        cursor: "pointer",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      {tag.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="form-field">

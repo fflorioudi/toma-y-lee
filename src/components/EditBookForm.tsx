@@ -9,6 +9,15 @@ type Category = {
   name: string;
 };
 
+type Tag = {
+  id: string;
+  name: string;
+};
+
+type BookTagRow = {
+  tag_id: string;
+};
+
 type Book = {
   id: string;
   title: string;
@@ -39,11 +48,23 @@ function getStoragePathFromPublicUrl(url: string, bucket: string): string | null
   }
 }
 
+function isValidHttpUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export default function EditBookForm({ book }: Props) {
   const supabase = createClient();
   const router = useRouter();
 
   const [categories, setCategories] = useState<Category[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+
   const [title, setTitle] = useState(book.title);
   const [author, setAuthor] = useState(book.author);
   const [description, setDescription] = useState(book.description || "");
@@ -58,28 +79,94 @@ export default function EditBookForm({ book }: Props) {
   const [removeCover, setRemoveCover] = useState(false);
 
   const [message, setMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const hasExistingPdf = !!book.pdf_url;
   const hasExistingCover = !!book.cover_url;
 
   useEffect(() => {
-    const loadCategories = async () => {
-      const { data } = await supabase
-        .from("categories")
-        .select("id, name")
-        .order("name", { ascending: true });
+    const loadData = async () => {
+      const [
+        { data: categoriesData },
+        { data: tagsData },
+        { data: bookTagsData },
+      ] = await Promise.all([
+        supabase
+          .from("categories")
+          .select("id, name")
+          .order("name", { ascending: true }),
 
-      setCategories((data || []) as Category[]);
+        supabase
+          .from("tags")
+          .select("id, name")
+          .order("name", { ascending: true }),
+
+        supabase
+          .from("book_tags")
+          .select("tag_id")
+          .eq("book_id", book.id),
+      ]);
+
+      setCategories((categoriesData || []) as Category[]);
+      setTags((tagsData || []) as Tag[]);
+
+      const currentBookTags = (bookTagsData || []) as BookTagRow[];
+      setSelectedTagIds(currentBookTags.map((row) => row.tag_id));
     };
 
-    loadCategories();
-  }, [supabase]);
+    loadData();
+  }, [supabase, book.id]);
+
+  const toggleTag = (tagId: string) => {
+    setSelectedTagIds((current) =>
+      current.includes(tagId)
+        ? current.filter((id) => id !== tagId)
+        : [...current, tagId]
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
+    setIsSuccess(false);
+
+    const cleanTitle = title.trim();
+    const cleanAuthor = author.trim();
+    const cleanDescription = description.trim();
+    const cleanExternalLink = externalLink.trim();
+    const cleanAudioLink = audioLink.trim();
+
+    if (cleanTitle.length < 2) {
+      setMessage("El título es demasiado corto.");
+      setLoading(false);
+      return;
+    }
+
+    if (cleanAuthor.length < 2) {
+      setMessage("El nombre del autor es demasiado corto.");
+      setLoading(false);
+      return;
+    }
+
+    if (cleanDescription && cleanDescription.length < 10) {
+      setMessage("La descripción es demasiado corta.");
+      setLoading(false);
+      return;
+    }
+
+    if (cleanExternalLink && !isValidHttpUrl(cleanExternalLink)) {
+      setMessage("Ingresá un link externo válido.");
+      setLoading(false);
+      return;
+    }
+
+    if (cleanAudioLink && !isValidHttpUrl(cleanAudioLink)) {
+      setMessage("Ingresá un link de audiolibro válido.");
+      setLoading(false);
+      return;
+    }
 
     const {
       data: { user },
@@ -92,8 +179,8 @@ export default function EditBookForm({ book }: Props) {
     }
 
     const finalPdfWillExist = !!pdfFile || (!!book.pdf_url && !removePdf);
-    const finalLinkWillExist = !!externalLink.trim();
-    const finalAudioWillExist = !!audioLink.trim();
+    const finalLinkWillExist = !!cleanExternalLink;
+    const finalAudioWillExist = !!cleanAudioLink;
 
     if (!finalLinkWillExist && !finalPdfWillExist && !finalAudioWillExist) {
       setMessage("El libro debe tener un link, un PDF o un audiolibro.");
@@ -112,7 +199,10 @@ export default function EditBookForm({ book }: Props) {
     }
 
     if (removeCover && book.cover_url) {
-      oldCoverPathToDelete = getStoragePathFromPublicUrl(book.cover_url, "book-covers");
+      oldCoverPathToDelete = getStoragePathFromPublicUrl(
+        book.cover_url,
+        "book-covers"
+      );
     }
 
     if (pdfFile) {
@@ -145,7 +235,10 @@ export default function EditBookForm({ book }: Props) {
         .getPublicUrl(filePath);
 
       if (book.pdf_url) {
-        oldPdfPathToDelete = getStoragePathFromPublicUrl(book.pdf_url, "book-pdfs");
+        oldPdfPathToDelete = getStoragePathFromPublicUrl(
+          book.pdf_url,
+          "book-pdfs"
+        );
       }
 
       newPdfUrl = publicUrlData.publicUrl;
@@ -182,7 +275,10 @@ export default function EditBookForm({ book }: Props) {
         .getPublicUrl(filePath);
 
       if (book.cover_url) {
-        oldCoverPathToDelete = getStoragePathFromPublicUrl(book.cover_url, "book-covers");
+        oldCoverPathToDelete = getStoragePathFromPublicUrl(
+          book.cover_url,
+          "book-covers"
+        );
       }
 
       newCoverUrl = publicUrlData.publicUrl;
@@ -191,11 +287,11 @@ export default function EditBookForm({ book }: Props) {
     const { error } = await supabase
       .from("books")
       .update({
-        title,
-        author,
-        description,
-        external_link: externalLink.trim() || null,
-        audio_url: audioLink.trim() || null,
+        title: cleanTitle,
+        author: cleanAuthor,
+        description: cleanDescription || null,
+        external_link: cleanExternalLink || null,
+        audio_url: cleanAudioLink || null,
         cover_url: newCoverUrl,
         pdf_url: newPdfUrl,
         category_id: categoryId || null,
@@ -208,6 +304,34 @@ export default function EditBookForm({ book }: Props) {
       return;
     }
 
+    const { error: deleteTagsError } = await supabase
+      .from("book_tags")
+      .delete()
+      .eq("book_id", book.id);
+
+    if (deleteTagsError) {
+      setMessage(deleteTagsError.message);
+      setLoading(false);
+      return;
+    }
+
+    if (selectedTagIds.length > 0) {
+      const tagRows = selectedTagIds.map((tagId) => ({
+        book_id: book.id,
+        tag_id: tagId,
+      }));
+
+      const { error: insertTagsError } = await supabase
+        .from("book_tags")
+        .insert(tagRows);
+
+      if (insertTagsError) {
+        setMessage(insertTagsError.message);
+        setLoading(false);
+        return;
+      }
+    }
+
     if (oldPdfPathToDelete) {
       await supabase.storage.from("book-pdfs").remove([oldPdfPathToDelete]);
     }
@@ -217,6 +341,7 @@ export default function EditBookForm({ book }: Props) {
     }
 
     setMessage("Libro actualizado correctamente ✅");
+    setIsSuccess(true);
     setLoading(false);
 
     setTimeout(() => {
@@ -226,53 +351,39 @@ export default function EditBookForm({ book }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginTop: "1.5rem" }}>
-      {message && <p style={{ marginBottom: "1rem" }}>{message}</p>}
+    <form onSubmit={handleSubmit} className="form-grid" style={{ marginTop: "1.5rem" }}>
+      {message && (
+        <p className={isSuccess ? "message-success" : "message-error"}>
+          {message}
+        </p>
+      )}
 
-      <div style={{ marginBottom: "1rem" }}>
+      <div className="form-field">
         <label htmlFor="title">Título</label>
         <input
           id="title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
-          style={{
-            display: "block",
-            width: "100%",
-            marginTop: "0.4rem",
-            padding: "0.7rem",
-          }}
         />
       </div>
 
-      <div style={{ marginBottom: "1rem" }}>
+      <div className="form-field">
         <label htmlFor="author">Autor</label>
         <input
           id="author"
           value={author}
           onChange={(e) => setAuthor(e.target.value)}
           required
-          style={{
-            display: "block",
-            width: "100%",
-            marginTop: "0.4rem",
-            padding: "0.7rem",
-          }}
         />
       </div>
 
-      <div style={{ marginBottom: "1rem" }}>
+      <div className="form-field">
         <label htmlFor="category">Categoría</label>
         <select
           id="category"
           value={categoryId}
           onChange={(e) => setCategoryId(e.target.value)}
-          style={{
-            display: "block",
-            width: "100%",
-            marginTop: "0.4rem",
-            padding: "0.7rem",
-          }}
         >
           <option value="">Sin categoría</option>
           {categories.map((category) => (
@@ -283,54 +394,84 @@ export default function EditBookForm({ book }: Props) {
         </select>
       </div>
 
-      <div style={{ marginBottom: "1rem" }}>
+      <div className="form-field">
+        <label>Tags</label>
+
+        <p className="subtle-text" style={{ marginTop: 0, marginBottom: "0.75rem" }}>
+          Tocá los tags para agregarlos o sacarlos del libro.
+        </p>
+
+        {tags.length === 0 ? (
+          <p className="empty-state" style={{ margin: 0 }}>
+            Todavía no hay tags cargados.
+          </p>
+        ) : (
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "0.6rem",
+            }}
+          >
+            {tags.map((tag) => {
+              const isSelected = selectedTagIds.includes(tag.id);
+
+              return (
+                <button
+                  key={tag.id}
+                  type="button"
+                  onClick={() => toggleTag(tag.id)}
+                  style={{
+                    padding: "0.55rem 0.85rem",
+                    borderRadius: "999px",
+                    border: isSelected
+                      ? "1px solid var(--accent)"
+                      : "1px solid var(--border)",
+                    background: isSelected ? "var(--accent)" : "var(--surface)",
+                    color: isSelected ? "var(--white)" : "var(--text)",
+                    fontWeight: isSelected ? 700 : 500,
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  {tag.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="form-field">
         <label htmlFor="description">Descripción</label>
         <textarea
           id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={5}
-          style={{
-            display: "block",
-            width: "100%",
-            marginTop: "0.4rem",
-            padding: "0.7rem",
-          }}
         />
       </div>
 
-      <div style={{ marginBottom: "1rem" }}>
+      <div className="form-field">
         <label htmlFor="externalLink">Link externo</label>
         <input
           id="externalLink"
           value={externalLink}
           onChange={(e) => setExternalLink(e.target.value)}
-          style={{
-            display: "block",
-            width: "100%",
-            marginTop: "0.4rem",
-            padding: "0.7rem",
-          }}
         />
       </div>
 
-      <div style={{ marginBottom: "1rem" }}>
+      <div className="form-field">
         <label htmlFor="audioLink">Audiolibro</label>
         <input
           id="audioLink"
           value={audioLink}
           onChange={(e) => setAudioLink(e.target.value)}
           placeholder="Link de YouTube, Spotify, Drive u otro audio"
-          style={{
-            display: "block",
-            width: "100%",
-            marginTop: "0.4rem",
-            padding: "0.7rem",
-          }}
         />
       </div>
 
-      <div style={{ marginBottom: "1rem" }}>
+      <div className="form-field">
         <strong>PDF actual:</strong>{" "}
         {hasExistingPdf ? (
           <a
@@ -347,7 +488,7 @@ export default function EditBookForm({ book }: Props) {
       </div>
 
       {hasExistingPdf && (
-        <div style={{ marginBottom: "1rem" }}>
+        <div className="form-field">
           <label>
             <input
               type="checkbox"
@@ -360,18 +501,18 @@ export default function EditBookForm({ book }: Props) {
         </div>
       )}
 
-      <div style={{ marginBottom: "1rem" }}>
+      <div className="form-field">
         <label>Reemplazar PDF</label>
         <input
           type="file"
           accept="application/pdf"
           onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
-          style={{ display: "block", marginTop: "0.4rem" }}
         />
       </div>
 
-      <div style={{ marginBottom: "1rem" }}>
+      <div className="form-field">
         <strong>Portada actual:</strong>
+
         <div style={{ marginTop: "0.5rem" }}>
           {hasExistingCover ? (
             <img
@@ -382,16 +523,17 @@ export default function EditBookForm({ book }: Props) {
                 height: "200px",
                 objectFit: "cover",
                 borderRadius: "10px",
+                border: "1px solid var(--border)",
               }}
             />
           ) : (
-            <p>No tiene portada.</p>
+            <p className="subtle-text">No tiene portada.</p>
           )}
         </div>
       </div>
 
       {hasExistingCover && (
-        <div style={{ marginBottom: "1rem" }}>
+        <div className="form-field">
           <label>
             <input
               type="checkbox"
@@ -404,25 +546,16 @@ export default function EditBookForm({ book }: Props) {
         </div>
       )}
 
-      <div style={{ marginBottom: "1rem" }}>
+      <div className="form-field">
         <label>Nueva portada (JPG, JPEG, PNG)</label>
         <input
           type="file"
           accept="image/png,image/jpeg"
           onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
-          style={{ display: "block", marginTop: "0.4rem" }}
         />
       </div>
 
-      <button
-        type="submit"
-        disabled={loading}
-        style={{
-          padding: "0.8rem 1rem",
-          borderRadius: "10px",
-          cursor: "pointer",
-        }}
-      >
+      <button type="submit" disabled={loading}>
         {loading ? "Guardando..." : "Guardar cambios"}
       </button>
     </form>
